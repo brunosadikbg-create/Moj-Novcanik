@@ -3,186 +3,609 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#111827">
+<meta name="theme-color" content="#f5f7f8">
 <title>Moj Novčanik</title>
 <style>
-:root{--bg:#f5f7f8;--card:#fff;--text:#17202a;--muted:#7b8794;--green:#35b779;--red:#ef6b73;--line:#e8ecef}
+:root{
+--bg:#f5f7f8;--card:#fff;--text:#17202a;--muted:#7b8794;
+--green:#35b779;--red:#ef6b73;--blue:#3978dc;--line:#e8ecef;
+--soft:#f1f4f5;--soft2:#f7f9fa;--overlay:rgba(0,0,0,.38)
+}
+body.dark{
+--bg:#111827;--card:#1f2937;--text:#f3f4f6;--muted:#aeb7c2;
+--green:#4ade80;--red:#fb7185;--blue:#60a5fa;--line:#374151;
+--soft:#273244;--soft2:#253041;--overlay:rgba(0,0,0,.65)
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
-.app{max-width:520px;margin:auto;min-height:100vh;padding-bottom:75px}
-header{background:#fff;padding:20px 18px 14px;border-bottom:1px solid var(--line)}
-.brand{font-size:28px;font-weight:800}.sub{color:var(--muted);font-size:14px}
-.month{margin-top:14px;display:flex;justify-content:space-between;align-items:center;background:#f1f4f5;border-radius:14px;padding:9px 12px}
-.month button{border:0;background:none;font-size:22px;padding:4px 12px}
-main{padding:16px}.hero{background:#fff;border-radius:24px;padding:20px;box-shadow:0 8px 24px #14202a12}
-.balance{text-align:center}.balance small{color:var(--muted)}.balance h1{font-size:34px;margin:4px 0}.balance p{color:var(--muted);margin:0}
-.donut{width:190px;height:190px;border-radius:50%;margin:20px auto;display:grid;place-items:center;position:relative}
-.donut:after{content:"";position:absolute;width:128px;height:128px;background:#fff;border-radius:50%}
-.donut span{position:relative;z-index:1;font-weight:800;text-align:center}.donut small{display:block;color:var(--muted);font-weight:500}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#f7f9fa;border-radius:16px;padding:13px}
-.stat small{color:var(--muted)}.stat b{display:block;font-size:18px;margin-top:4px}
-.income b{color:var(--green)}.expense b{color:var(--red)}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.actions button{border:0;border-radius:15px;padding:14px;font-weight:800;font-size:15px}
-.addIncome{background:#dff6ea;color:#198754}.addExpense{background:#ffe3e6;color:#c94d59}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,select{font:inherit}
+.app{max-width:540px;margin:auto;min-height:100vh;padding-bottom:78px}
+header{background:var(--card);padding:18px;border-bottom:1px solid var(--line)}
+.brandRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-size:28px;font-weight:800}
+.sub{font-size:14px;color:var(--muted)}
+.themeBtn{border:0;background:var(--soft);color:var(--text);width:44px;height:44px;border-radius:14px;font-size:21px}
+.month{margin-top:14px;background:var(--soft);border-radius:14px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between}
+.month button{border:0;background:transparent;color:var(--text);font-size:25px;padding:4px 12px}
+main{padding:16px}
+.card,.saving,.categoryHead,.list{background:var(--card)}
+.card{border-radius:22px;padding:18px;box-shadow:0 6px 22px rgba(20,32,42,.07)}
+.balance{text-align:center}
+.balance small{color:var(--muted)}
+.balance h1{font-size:34px;margin:5px 0}
+.balance p{margin:0;color:var(--muted)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.stat{background:var(--soft2);border-radius:15px;padding:13px}
+.stat small{color:var(--muted)}
+.stat b{display:block;font-size:18px;margin-top:4px}
+.income b{color:var(--green)}
+.expense b{color:var(--red)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.actions button{border:0;border-radius:14px;padding:13px;font-weight:800}
+.addIncome{background:#dff6ea;color:#198754}
+.addExpense{background:#ffe3e6;color:#c94d59}
+.saving{margin-top:14px;border-radius:20px;padding:16px;border:1px solid var(--line);box-shadow:0 5px 18px rgba(20,32,42,.05)}
+.savingTop{display:flex;justify-content:space-between;align-items:center}
+.savingTitle{font-weight:800;font-size:17px}
+.savingAmount{font-size:25px;font-weight:800;color:var(--blue);margin-top:3px}
+.savingButtons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.savingButtons button{border:0;border-radius:12px;padding:11px;font-weight:700;background:#edf4ff;color:var(--blue)}
+body.dark .savingButtons button{background:#253653}
 h2{font-size:19px;margin:24px 2px 12px}
-.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.cat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:13px 7px;text-align:center;cursor:pointer}
-.cat:active{transform:scale(.97)}.ico{font-size:27px}.cat b{display:block;font-size:13px;margin-top:5px}.cat small{color:var(--muted)}
-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line)}
-nav>div{max-width:520px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr)}
-nav button{border:0;background:none;padding:10px;font-size:12px;color:var(--muted)}nav button span{display:block;font-size:21px}
-.sheet{display:none;position:fixed;inset:0;background:#0006;align-items:flex-end;z-index:5}.sheet.show{display:flex}
-.modal{background:#fff;width:100%;max-width:520px;margin:auto;border-radius:24px 24px 0 0;padding:20px}
-.close{float:right;border:0;border-radius:50%;width:34px;height:34px}
-.modal input,.modal select{width:100%;padding:13px;border:1px solid #dfe4e7;border-radius:12px;font-size:16px;margin:7px 0 12px}
-.save{width:100%;border:0;border-radius:13px;padding:14px;font-weight:800;background:#17202a;color:#fff}
-.list{background:#fff;border-radius:18px;overflow:hidden}.row{display:flex;justify-content:space-between;gap:10px;padding:14px;border-bottom:1px solid var(--line)}
-.row small{display:block;color:var(--muted);margin-top:3px}.plus{color:var(--green);font-weight:800}.minus{color:var(--red);font-weight:800}
-.empty{text-align:center;color:var(--muted);padding:30px}.back{border:0;background:#fff;border-radius:12px;padding:10px 15px;font-weight:700;margin-bottom:15px}
-.categoryHead{background:#fff;border-radius:20px;padding:18px;margin-bottom:15px}.categoryHead .big{font-size:28px}
-.categoryTotal{font-size:25px;font-weight:800;color:var(--red);margin-top:5px}
+.cats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.cat{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px;cursor:pointer}
+.catTop{display:flex;align-items:center;gap:10px}
+.ico{font-size:28px}
+.cat b{font-size:15px}
+.cat small{display:block;color:var(--muted);margin-top:7px}
+.list{border-radius:18px;overflow:hidden}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.rowLeft{min-width:0}
+.rowTitle{font-weight:750}
+.rowMeta{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.plus{color:var(--green);font-weight:800}
+.minus{color:var(--red);font-weight:800}
+.rowRight{text-align:right;white-space:nowrap}
+.delete{margin-top:5px;border:0;background:#fff0f1;color:#c94d59;border-radius:8px;padding:5px 8px;font-size:12px}
+body.dark .delete{background:#3b2027}
+.empty{text-align:center;color:var(--muted);padding:30px}
+.back{border:0;background:var(--card);color:var(--text);border-radius:12px;padding:10px 15px;font-weight:700;margin-bottom:15px}
+.categoryHead{border-radius:20px;padding:18px;margin-bottom:15px}
+.categoryHead .big{font-size:23px;font-weight:800}
+.categoryTotal{font-size:25px;font-weight:800;color:var(--red);margin-top:6px}
+nav{position:fixed;z-index:4;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line)}
+nav>div{max-width:540px;margin:auto;display:grid;grid-template-columns:repeat(2,1fr)}
+nav button{border:0;background:transparent;color:var(--muted);padding:10px;font-size:12px}
+nav button span{display:block;font-size:21px}
+.sheet{display:none;position:fixed;z-index:10;inset:0;background:var(--overlay);align-items:flex-end}
+.sheet.show{display:flex}
+.modal{width:100%;max-width:540px;margin:auto;background:var(--card);color:var(--text);border-radius:24px 24px 0 0;padding:20px}
+.modalHeader{display:flex;justify-content:space-between;align-items:center}
+.modal h2{margin:0 0 12px}
+.close{border:0;background:var(--soft);color:var(--text);border-radius:50%;width:34px;height:34px}
+.modal label{display:block;font-size:13px;color:var(--muted);margin-top:9px}
+.modal input,.modal select{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;margin:6px 0 8px;background:var(--card);color:var(--text)}
+.save{width:100%;border:0;border-radius:13px;padding:14px;font-weight:800;background:#17202a;color:#fff;margin-top:8px}
 </style>
 </head>
+
 <body>
 <div class="app">
+
 <header>
+<div class="brandRow">
+<div>
 <div class="brand">Moj Novčanik</div>
 <div class="sub">Tvoj lični pregled novca</div>
-<div class="month"><button onclick="moveMonth(-1)">‹</button><strong id="month"></strong><button onclick="moveMonth(1)">›</button></div>
-</header>
-<main id="main"></main>
-<nav><div>
-<button onclick="home()"><span>🏠</span>Početna</button>
-<button onclick="historyPage()"><span>📋</span>Istorija</button>
-<button onclick="openModal('expense')"><span>＋</span>Unos</button>
-</div></nav>
+</div>
+<button class="themeBtn" id="themeBtn" onclick="toggleTheme()">🌙</button>
 </div>
 
-<div class="sheet" id="sheet">
+<div class="month">
+<button onclick="moveMonth(-1)">‹</button>
+<strong id="month"></strong>
+<button onclick="moveMonth(1)">›</button>
+</div>
+</header>
+
+<main id="main"></main>
+
+<nav>
+<div>
+<button onclick="home()"><span>🏠</span>Početna</button>
+<button onclick="openEntryModal('expense')"><span>＋</span>Unos</button>
+</div>
+</nav>
+
+</div>
+
+<div class="sheet" id="entrySheet">
 <div class="modal">
-<button class="close" onclick="closeModal()">×</button>
-<h2 id="title">Novi trošak</h2>
+<div class="modalHeader">
+<h2 id="entryTitle">Novi trošak</h2>
+<button class="close" onclick="closeSheet('entrySheet')">×</button>
+</div>
+
 <label>Iznos (RSD)</label>
-<input id="amount" type="number" min="1" placeholder="npr. 2500">
+<input id="amount" type="number" min="1" inputmode="decimal" placeholder="npr. 2500">
+
 <label>Kategorija</label>
 <select id="category"></select>
+
 <label>Opis</label>
-<input id="note" placeholder="npr. Struja, voda, gorivo...">
+<input id="note" placeholder="npr. račun za struju">
+
 <button class="save" onclick="saveEntry()">Sačuvaj</button>
 </div>
 </div>
 
+<div class="sheet" id="savingSheet">
+<div class="modal">
+<div class="modalHeader">
+<h2 id="savingTitle">Štedni račun</h2>
+<button class="close" onclick="closeSheet('savingSheet')">×</button>
+</div>
+
+<label>Iznos (RSD)</label>
+<input id="savingAmountInput" type="number" min="1" inputmode="decimal" placeholder="npr. 5000">
+
+<label>Opis</label>
+<input id="savingNote" placeholder="npr. prebačeno sa računa">
+
+<button class="save" onclick="saveSaving()">Sačuvaj</button>
+</div>
+</div>
+
 <script>
-const cats=[
-['🍎','Hrana'],['🚗','Auto'],['🏠','Kuća'],['👕','Odeća'],['💊','Zdravlje'],['📱','Telefon'],
-['🧾','Sitni računi'],['⚽','Sport'],['🎁','Pokloni'],['🧴','Lično'],['💳','Rate'],['📦','Ostalo']
+const categories=[
+['🍎','Hrana'],
+['🏠','Kuća'],
+['🚗','Auto'],
+['💊','Zdravlje'],
+['👕','Garderoba'],
+['⚽','Sport'],
+['🎁','Pokloni'],
+['🧾','Sitni računi'],
+['🍸','Izlasci'],
+['✈️','Putovanje']
 ];
 
-let s;
-try{s=JSON.parse(localStorage.getItem('mojNovcanik')||'{"entries":[]}');}
-catch(e){s={entries:[]};}
-if(!Array.isArray(s.entries))s.entries=[];
+let state;
 
-let d=new Date();
-let mode='expense';
-d.setDate(1);
+try{
+state=JSON.parse(localStorage.getItem('mojNovcanik')||'{"entries":[],"savings":0}')
+}catch(e){
+state={entries:[],savings:0}
+}
 
-function money(n){return new Intl.NumberFormat('sr-RS').format(Math.round(n))+' RSD';}
-function key(){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
-function monthName(){return new Intl.DateTimeFormat('sr-Latn-RS',{month:'long',year:'numeric'}).format(d).replace(/^./,x=>x.toUpperCase());}
-function entries(){return s.entries.filter(e=>e.date && e.date.startsWith(key()));}
+if(!Array.isArray(state.entries))state.entries=[];
+if(typeof state.savings!=='number')state.savings=0;
+
+state.entries.forEach(e=>{
+if(e.category==='Odeća')e.category='Garderoba'
+});
+
+let current=new Date();
+current.setDate(1);
+
+let entryMode='expense';
+let savingMode='add';
+
+function money(n){
+return new Intl.NumberFormat('sr-RS').format(Math.round(Number(n)||0))+' RSD'
+}
+
+function monthKey(){
+return current.getFullYear()+'-'+String(current.getMonth()+1).padStart(2,'0')
+}
+
+function monthName(){
+return new Intl.DateTimeFormat('sr-Latn-RS',{
+month:'long',
+year:'numeric'
+}).format(current).replace(/^./,x=>x.toUpperCase())
+}
+
+function saveState(){
+localStorage.setItem('mojNovcanik',JSON.stringify(state))
+}
+
+function monthEntries(){
+return state.entries.filter(e=>e.date&&e.date.startsWith(monthKey()))
+}
+
 function totals(){
-const a=entries();
+let a=monthEntries();
+
 return{
-inc:a.filter(x=>x.type==='income').reduce((q,x)=>q+Number(x.amount||0),0),
-exp:a.filter(x=>x.type==='expense').reduce((q,x)=>q+Number(x.amount||0),0)
-};
+income:a.filter(e=>e.type==='income').reduce((s,e)=>s+Number(e.amount||0),0),
+expense:a.filter(e=>e.type==='expense').reduce((s,e)=>s+Number(e.amount||0),0)
+}
+}
+
+function esc(v){
+return String(v??'').replace(/[&<>"']/g,c=>({
+'&':'&amp;',
+'<':'&lt;',
+'>':'&gt;',
+'"':'&quot;',
+"'":'&#39;'
+}[c]))
+}
+
+function dateText(d){
+let x=new Date(d+'T12:00:00');
+return isNaN(x)?d:x.toLocaleDateString('sr-RS')
+}
+
+function applyTheme(){
+let dark=localStorage.getItem('mojNovcanikTheme')==='dark';
+
+document.body.classList.toggle('dark',dark);
+
+document.getElementById('themeBtn').textContent=
+dark?'☀️':'🌙';
+}
+
+function toggleTheme(){
+
+let dark=!document.body.classList.contains('dark');
+
+document.body.classList.toggle('dark',dark);
+
+localStorage.setItem(
+'mojNovcanikTheme',
+dark?'dark':'light'
+);
+
+document.getElementById('themeBtn').textContent=
+dark?'☀️':'🌙';
 }
 
 function home(){
+
 document.getElementById('month').textContent=monthName();
-const t=totals();
-const p=t.inc?Math.min(100,t.exp/t.inc*100):0;
 
-document.getElementById('main').innerHTML=
-'<section class="hero">'+
-'<div class="balance"><small>Stanje ovog meseca</small><h1>'+money(t.inc-t.exp)+'</h1><p>'+p.toFixed(1)+'% primanja potrošeno</p></div>'+
-'<div class="donut" style="background:conic-gradient(var(--red) 0deg '+p*3.6+'deg,#dfe5e8 '+p*3.6+'deg 360deg)"><span>'+Math.round(p)+'%<small>potrošeno</small></span></div>'+
-'<div class="stats"><div class="stat income"><small>Primanja</small><b>'+money(t.inc)+'</b></div><div class="stat expense"><small>Troškovi</small><b>'+money(t.exp)+'</b></div></div>'+
-'<div class="actions"><button class="addIncome" onclick="openModal(\'income\')">＋ Primanje</button><button class="addExpense" onclick="openModal(\'expense\')">− Trošak</button></div>'+
-'</section><h2>Kategorije</h2><div class="cats">'+
-cats.map(c=>{
-const n=entries().filter(x=>x.category===c[1]&&x.type==='expense').reduce((q,x)=>q+Number(x.amount||0),0);
-return '<div class="cat" onclick="categoryPage('+JSON.stringify(c[1])+')"><div class="ico">'+c[0]+'</div><b>'+c[1]+'</b><small>'+money(n)+'</small></div>';
-}).join('')+
-'</div>';
+let t=totals();
+let balance=t.income-t.expense;
+
+document.getElementById('main').innerHTML=`
+
+<section class="card">
+
+<div class="balance">
+<small>Stanje ovog meseca</small>
+<h1>${money(balance)}</h1>
+<p>Primanja minus troškovi</p>
+</div>
+
+<div class="stats">
+
+<div class="stat income">
+<small>Primanja</small>
+<b>${money(t.income)}</b>
+</div>
+
+<div class="stat expense">
+<small>Troškovi</small>
+<b>${money(t.expense)}</b>
+</div>
+
+</div>
+
+<div class="actions">
+
+<button class="addIncome"
+onclick="openEntryModal('income')">
+＋ Primanje
+</button>
+
+<button class="addExpense"
+onclick="openEntryModal('expense')">
+− Trošak
+</button>
+
+</div>
+
+</section>
+
+<section class="saving">
+
+<div class="savingTop">
+
+<div>
+<div class="savingTitle">🏦 Štedni račun</div>
+<div class="savingAmount">${money(state.savings)}</div>
+</div>
+
+<div style="font-size:30px">💰</div>
+
+</div>
+
+<div class="savingButtons">
+
+<button onclick="openSavingModal('add')">
+＋ Dodaj u štednju
+</button>
+
+<button onclick="openSavingModal('withdraw')">
+− Povuci iz štednje
+</button>
+
+</div>
+
+</section>
+
+<h2>Kategorije troškova</h2>
+
+<div class="cats">
+
+${categories.map(c=>{
+
+let n=monthEntries()
+.filter(e=>e.type==='expense'&&e.category===c[1])
+.reduce((s,e)=>s+Number(e.amount||0),0);
+
+return `
+
+<div class="cat"
+onclick="categoryPage('${c[1]}')">
+
+<div class="catTop">
+<span class="ico">${c[0]}</span>
+<b>${c[1]}</b>
+</div>
+
+<small>${money(n)}</small>
+
+</div>
+
+`
+
+}).join('')}
+
+</div>
+`;
 }
 
-function categoryPage(category){
+function categoryPage(cat){
+
 document.getElementById('month').textContent=monthName();
-const a=entries().filter(e=>e.type==='expense'&&e.category===category).slice().reverse();
-const cat=cats.find(c=>c[1]===category);
-const total=a.reduce((q,x)=>q+Number(x.amount||0),0);
 
-document.getElementById('main').innerHTML=
-'<button class="back" onclick="home()">← Nazad</button>'+
-'<div class="categoryHead"><div class="big">'+(cat?cat[0]:'📦')+' '+category+'</div><div class="categoryTotal">'+money(total)+'</div><small>Ukupno potrošeno ovog meseca</small></div>'+
-'<div class="list">'+
-(a.length?a.map(e=>{
-const dt=new Date(e.date+'T12:00:00');
-const dateText=isNaN(dt)?e.date:dt.toLocaleDateString('sr-RS');
-return '<div class="row"><div><b>'+escapeHtml(e.note||'Bez opisa')+'</b><small>'+dateText+'</small></div><div class="minus">− '+money(e.amount)+'</div></div>';
-}).join(''):'<div class="empty">Nema plaćenih računa u ovoj kategoriji ovog meseca.</div>')+
-'</div>';
+let a=monthEntries()
+.filter(e=>e.type==='expense'&&e.category===cat)
+.slice()
+.reverse();
+
+let c=categories.find(x=>x[1]===cat);
+
+let total=a.reduce(
+(s,e)=>s+Number(e.amount||0),0
+);
+
+document.getElementById('main').innerHTML=`
+
+<button class="back" onclick="home()">
+← Nazad
+</button>
+
+<div class="categoryHead">
+
+<div class="big">
+${c?c[0]:'📦'} ${esc(cat)}
+</div>
+
+<div class="categoryTotal">
+${money(total)}
+</div>
+
+<small style="color:var(--muted)">
+Ukupno ovog meseca
+</small>
+
+</div>
+
+<div class="list">
+
+${
+a.length
+?a.map(row).join('')
+:'<div class="empty">Nema troškova u ovoj kategoriji ovog meseca.</div>'
 }
 
-function historyPage(){
-document.getElementById('month').textContent=monthName();
-const a=entries().slice().reverse();
-document.getElementById('main').innerHTML=
-'<h2>Istorija — '+monthName()+'</h2><div class="list">'+
-(a.length?a.map(e=>{
-const dt=new Date(e.date+'T12:00:00');
-const dateText=isNaN(dt)?e.date:dt.toLocaleDateString('sr-RS');
-return '<div class="row"><div><b>'+escapeHtml(e.category)+'</b><small>'+escapeHtml(e.note||'Bez opisa')+' · '+dateText+'</small></div><div class="'+(e.type==='income'?'plus':'minus')+'">'+(e.type==='income'?'+':'−')+' '+money(e.amount)+'</div></div>';
-}).join(''):'<div class="empty">Nema unosa za ovaj mesec.</div>')+
-'</div>';
+</div>
+`;
 }
 
-function escapeHtml(v){
-return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function row(e){
+
+return `
+
+<div class="row">
+
+<div class="rowLeft">
+
+<div class="rowTitle">
+${esc(e.note||e.category||'Bez opisa')}
+</div>
+
+<span class="rowMeta">
+${esc(e.category||'')} · ${dateText(e.date)}
+</span>
+
+</div>
+
+<div class="rowRight">
+
+<div class="${e.type==='income'?'plus':'minus'}">
+
+${e.type==='income'?'+':'−'} ${money(e.amount)}
+
+</div>
+
+<button class="delete"
+onclick="deleteEntry(${e.id})">
+Obriši
+</button>
+
+</div>
+
+</div>
+
+`;
 }
 
-function moveMonth(x){d.setMonth(d.getMonth()+x);home();}
+function deleteEntry(id){
 
-function openModal(t){
-mode=t;
-document.getElementById('title').textContent=t==='income'?'Novo primanje':'Novi trošak';
-const list=t==='income'?[['💰','Plata'],['💼','Dodatni prihod'],['📦','Ostalo']]:cats;
-document.getElementById('category').innerHTML=list.map(c=>'<option value="'+c[1]+'">'+c[0]+' '+c[1]+'</option>').join('');
+if(!confirm('Obrisati ovaj unos?'))return;
+
+state.entries=
+state.entries.filter(e=>e.id!==id);
+
+saveState();
+
+home();
+}
+
+function openEntryModal(type){
+
+entryMode=type;
+
+document.getElementById('entryTitle').textContent=
+type==='income'
+?'Novo primanje'
+:'Novi trošak';
+
+let options=
+type==='income'
+?
+[
+['💰','Plata'],
+['💼','Dodatni prihod'],
+['📦','Ostalo']
+]
+:
+categories;
+
+document.getElementById('category').innerHTML=
+options.map(x=>
+`<option value="${x[1]}">${x[0]} ${x[1]}</option>`
+).join('');
+
 document.getElementById('amount').value='';
 document.getElementById('note').value='';
-document.getElementById('sheet').classList.add('show');
-}
 
-function closeModal(){document.getElementById('sheet').classList.remove('show');}
+document.getElementById('entrySheet')
+.classList.add('show');
+}
 
 function saveEntry(){
-const a=Number(document.getElementById('amount').value);
-if(!a||a<1){alert('Unesi iznos.');return;}
-const now=new Date();
-const day=String(now.getDate()).padStart(2,'0');
-s.entries.push({
-id:Date.now(),type:mode,amount:a,
-category:document.getElementById('category').value,
-note:document.getElementById('note').value.trim(),
-date:key()+'-'+day
+
+let a=Number(
+document.getElementById('amount').value
+);
+
+if(!a||a<1){
+alert('Unesi iznos.');
+return;
+}
+
+let day=
+String(new Date().getDate()).padStart(2,'0');
+
+state.entries.push({
+
+id:Date.now(),
+
+type:entryMode,
+
+amount:a,
+
+category:
+document.getElementById('category').value,
+
+note:
+document.getElementById('note').value.trim(),
+
+date:monthKey()+'-'+day
+
 });
-localStorage.setItem('mojNovcanik',JSON.stringify(s));
-closeModal();
+
+saveState();
+
+closeSheet('entrySheet');
+
 home();
 }
 
+function openSavingModal(mode){
+
+savingMode=mode;
+
+document.getElementById('savingTitle').textContent=
+mode==='add'
+?'Dodaj u štednju'
+:'Povuci iz štednje';
+
+document.getElementById('savingAmountInput').value='';
+document.getElementById('savingNote').value='';
+
+document.getElementById('savingSheet')
+.classList.add('show');
+}
+
+function saveSaving(){
+
+let a=Number(
+document.getElementById('savingAmountInput').value
+);
+
+if(!a||a<1){
+alert('Unesi iznos.');
+return;
+}
+
+if(
+savingMode==='withdraw'
+&&
+a>state.savings
+){
+alert(
+'Nema dovoljno novca na štednom računu.'
+);
+return;
+}
+
+state.savings+=
+savingMode==='add'
+?a
+:-a;
+
+saveState();
+
+closeSheet('savingSheet');
+
+home();
+}
+
+function closeSheet(id){
+document.getElementById(id)
+.classList.remove('show');
+}
+
+function moveMonth(n){
+
+current.setMonth(
+current.getMonth()+n
+);
+
+home();
+}
+
+applyTheme();
 home();
 </script>
+
 </body>
 </html>
