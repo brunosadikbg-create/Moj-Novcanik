@@ -28,7 +28,7 @@ body.dark{
   max-width:520px;
   margin:auto;
   min-height:100vh;
-  padding-bottom:90px;
+  padding-bottom:95px;
 }
 
 header{
@@ -77,6 +77,44 @@ header h1{
 .balance{
   font-size:32px;
   font-weight:bold;
+}
+
+.month-box{
+  background:white;
+  border-radius:18px;
+  padding:14px;
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
+}
+
+.dark .month-box{
+  background:#1a2127;
+}
+
+.month-arrow{
+  border:0;
+  background:#edf0f2;
+  width:40px;
+  height:40px;
+  border-radius:12px;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.dark .month-arrow{
+  background:#293139;
+  color:white;
+}
+
+.month-name{
+  text-align:center;
+  font-size:18px;
+  font-weight:bold;
+  flex:1;
 }
 
 .stats{
@@ -289,7 +327,8 @@ label{
   color:#b8c0c6;
 }
 
-input,select{
+input,
+select{
   width:100%;
   padding:14px;
   border-radius:12px;
@@ -426,6 +465,17 @@ input,select{
   background:#202930;
 }
 
+.date-box{
+  background:#f5f7f8;
+  border-radius:12px;
+  padding:10px;
+  margin-bottom:5px;
+}
+
+.dark .date-box{
+  background:#11171b;
+}
+
 @media(max-width:380px){
   .categories{
     grid-template-columns:1fr;
@@ -440,32 +490,48 @@ input,select{
 
 <header>
   <h1 id="headerTitle">Moj Novcanik</h1>
-  <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+
+  <button
+    class="theme-btn"
+    onclick="toggleTheme()"
+    id="themeBtn"
+  >
+    🌙
+  </button>
 </header>
 
 <main id="app"></main>
 
 </div>
 
+
 <nav class="bottom-nav">
 
-  <button class="nav-btn" onclick="home()">
+  <button
+    class="nav-btn"
+    onclick="home()"
+  >
     <span class="nav-icon">🏠</span>
     Početna
   </button>
 
-  <button class="nav-btn" onclick="addPage()">
+
+  <button
+    class="nav-btn"
+    onclick="addPage()"
+  >
     <span class="nav-icon">➕</span>
     Unos
   </button>
 
 </nav>
 
+
 <script>
 
-/* =========================
-   PODACI
-========================= */
+/* =========================================
+   KATEGORIJE
+========================================= */
 
 const categories = [
   ["🍔","Hrana"],
@@ -480,51 +546,291 @@ const categories = [
   ["✈️","Putovanje"]
 ];
 
-let state = JSON.parse(localStorage.getItem("mojNovcanik")) || {
-  entries: [],
-  savings: 0,
-  savingHistory: []
-};
+
+/* =========================================
+   POČETNI PODACI
+
+   NOVA VERZIJA:
+   Redovan račun = 0
+   Uplate = 0
+   Troškovi = 0
+   Štednja = 10.575
+========================================= */
+
+const STORAGE_KEY = "mojNovcanikKalendarV1";
+
+let state =
+  JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+
+    entries: [],
+
+    savings: 10575,
+
+    savingHistory: [
+
+      {
+        id: 1,
+
+        type: "initial",
+
+        amount: 10575,
+
+        description: "Početno stanje štednje",
+
+        date: "08.10.2026"
+
+      }
+
+    ],
+
+    initialSavings: 10575
+
+  };
+
+
+/* =========================================
+   AKTIVNI TIP I KATEGORIJA
+========================================= */
 
 let currentType = "expense";
-
-/*
-  OVO PAMTI IZ KOJE KATEGORIJE JE KORISNIK UŠAO.
-
-  Primer:
-  Kuća → Unos → automatski Kuća
-  Sport → Unos → automatski Sport
-  Auto → Unos → automatski Auto
-*/
 
 let selectedCategory = "";
 
 
-/* =========================
+/* =========================================
+   AKTIVNI MESEC
+
+   Trenutno: oktobar 2026
+========================================= */
+
+let selectedMonth = "2026-10";
+
+
+/* =========================================
    ČUVANJE
-========================= */
+========================================= */
 
 function saveState(){
-  localStorage.setItem("mojNovcanik", JSON.stringify(state));
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(state)
+  );
+
 }
+
+
+/* =========================================
+   NOVAC
+========================================= */
 
 function money(n){
-  return Number(n || 0).toLocaleString("sr-RS") + " RSD";
+
+  return Number(n || 0)
+    .toLocaleString("sr-RS") + " RSD";
+
 }
 
-function today(){
-  return new Date().toLocaleDateString("sr-RS");
+
+/* =========================================
+   DATUM
+========================================= */
+
+function formatDate(dateString){
+
+  if(!dateString){
+    return "";
+  }
+
+  const parts = dateString.split("-");
+
+  if(parts.length === 3){
+
+    return (
+      parts[2] +
+      "." +
+      parts[1] +
+      "." +
+      parts[0] +
+      "."
+    );
+
+  }
+
+  return dateString;
+
 }
 
 
-/* =========================
-   UKUPNI IZNOSI
-========================= */
+/* =========================================
+   DANAS
+========================================= */
 
-function totals(){
+function todayISO(){
+
+  const d = new Date();
+
+  const year =
+    d.getFullYear();
+
+  const month =
+    String(d.getMonth() + 1).padStart(2,"0");
+
+  const day =
+    String(d.getDate()).padStart(2,"0");
+
+  return `${year}-${month}-${day}`;
+
+}
+
+
+/* =========================================
+   MESEC + GODINA
+========================================= */
+
+function monthName(month){
+
+  const names = [
+
+    "Januar",
+    "Februar",
+    "Mart",
+    "April",
+    "Maj",
+    "Jun",
+    "Jul",
+    "Avgust",
+    "Septembar",
+    "Oktobar",
+    "Novembar",
+    "Decembar"
+
+  ];
+
+  return names[month - 1];
+
+}
+
+
+function monthTitle(){
+
+  const parts =
+    selectedMonth.split("-");
+
+  const year =
+    Number(parts[0]);
+
+  const month =
+    Number(parts[1]);
+
+  return (
+    monthName(month) +
+    " " +
+    year
+  );
+
+}
+
+
+/* =========================================
+   PROMENA MESECA
+========================================= */
+
+function changeMonth(direction){
+
+  const parts =
+    selectedMonth.split("-");
+
+  let year =
+    Number(parts[0]);
+
+  let month =
+    Number(parts[1]);
+
+  month += direction;
+
+  if(month < 1){
+
+    month = 12;
+    year--;
+
+  }
+
+  if(month > 12){
+
+    month = 1;
+    year++;
+
+  }
+
+  selectedMonth =
+    year +
+    "-" +
+    String(month).padStart(2,"0");
+
+  home();
+
+}
+
+
+/* =========================================
+   DA LI JE U MESECU
+========================================= */
+
+function isInSelectedMonth(date){
+
+  return date &&
+    date.substring(0,7) === selectedMonth;
+
+}
+
+
+/* =========================================
+   UKUPNI ULAZI / TROŠKOVI ZA MESEC
+========================================= */
+
+function monthlyTotals(){
 
   let income = 0;
+
   let expense = 0;
+
+
+  state.entries.forEach(e=>{
+
+    if(!isInSelectedMonth(e.date)){
+      return;
+    }
+
+    if(e.type === "income"){
+      income += Number(e.amount);
+    }
+
+    if(e.type === "expense"){
+      expense += Number(e.amount);
+    }
+
+  });
+
+
+  return {
+    income,
+    expense
+  };
+
+}
+
+
+/* =========================================
+   SVI UKUPNI PODACI
+========================================= */
+
+function allTotals(){
+
+  let income = 0;
+
+  let expense = 0;
+
 
   state.entries.forEach(e=>{
 
@@ -538,87 +844,162 @@ function totals(){
 
   });
 
+
   return {
     income,
     expense
   };
+
 }
 
 
-/*
-  REDOVAN RAČUN
+/* =========================================
+   IZNOS PREBAČEN U ŠTEDNJU
 
-  Uplate povećavaju stanje.
+   NE RAČUNAMO početnih 10.575.
+========================================= */
 
-  Obični troškovi smanjuju stanje.
+function transferredToSavings(){
 
-  Uplata u štednju smanjuje redovan račun.
+  let total = 0;
 
-  Povlačenje sa štednje NE povećava redovan račun.
-*/
-
-function regularBalance(){
-
-  const t = totals();
-
-  let transferredToSavings = 0;
 
   state.savingHistory.forEach(x=>{
 
     if(x.type === "deposit"){
-      transferredToSavings += Number(x.amount);
+
+      total += Number(x.amount);
+
     }
 
   });
 
-  return t.income - t.expense - transferredToSavings;
+
+  return total;
+
 }
 
 
-/* =========================
-   KATEGORIJE
-========================= */
+/* =========================================
+   TRENUTNO STANJE REDOVNOG RAČUNA
+
+   Početno = 0
+
+   + sve uplate
+   - svi obični troškovi
+   - novac prebačen u štednju
+
+   Povlačenje sa štednje NE vraća novac
+   na redovan račun.
+========================================= */
+
+function regularBalance(){
+
+  const totals =
+    allTotals();
+
+
+  const deposits =
+    transferredToSavings();
+
+
+  return (
+    totals.income -
+    totals.expense -
+    deposits
+  );
+
+}
+
+
+/* =========================================
+   UKUPNO PO KATEGORIJI U IZABRANOM MESECU
+========================================= */
 
 function categoryTotal(name){
 
   return state.entries
+
     .filter(e =>
+
       e.type === "expense" &&
-      e.category === name
+
+      e.category === name &&
+
+      isInSelectedMonth(e.date)
+
     )
+
     .reduce(
-      (sum,e) => sum + Number(e.amount),
+
+      (sum,e) =>
+        sum + Number(e.amount),
+
       0
+
     );
+
 }
 
 
-/* =========================
-   POČETNA
-========================= */
+/* =========================================
+   POČETNA STRANA
+========================================= */
 
 function home(){
 
-  /*
-    Kada se vratimo na početnu,
-    više nismo vezani za prethodnu kategoriju.
-  */
-
   selectedCategory = "";
 
-  const t = totals();
 
-  document.getElementById("headerTitle").textContent =
-    "Moj Novcanik";
+  const totals =
+    monthlyTotals();
+
+
+  document.getElementById(
+    "headerTitle"
+  ).textContent = "Moj Novcanik";
+
 
   let html = `
+
     <div class="page">
+
+
+      <!-- MESEC -->
+
+      <div class="month-box">
+
+        <button
+          class="month-arrow"
+          onclick="changeMonth(-1)"
+        >
+          ‹
+        </button>
+
+
+        <div class="month-name">
+          ${monthTitle()}
+        </div>
+
+
+        <button
+          class="month-arrow"
+          onclick="changeMonth(1)"
+        >
+          ›
+        </button>
+
+      </div>
+
+
+      <!-- STANJE -->
 
       <div class="balance-card">
 
         <div class="balance-title">
           Stanje na redovnom računu
         </div>
+
 
         <div class="balance">
           ${money(regularBalance())}
@@ -627,44 +1008,62 @@ function home(){
       </div>
 
 
+      <!-- UPLATE / TROŠKOVI -->
+
       <div class="stats">
 
-        <div class="stat" onclick="historyPage('income')">
+
+        <div
+          class="stat"
+          onclick="historyPage('income')"
+        >
 
           <div class="stat-title">
-            Uplate
+            Uplate — ${monthTitle()}
           </div>
+
 
           <div class="stat-value income">
-            ${money(t.income)}
+            ${money(totals.income)}
           </div>
 
         </div>
 
 
-        <div class="stat" onclick="historyPage('expense')">
+        <div
+          class="stat"
+          onclick="historyPage('expense')"
+        >
 
           <div class="stat-title">
-            Troškovi
+            Troškovi — ${monthTitle()}
           </div>
 
+
           <div class="stat-value expense">
-            ${money(t.expense)}
+            ${money(totals.expense)}
           </div>
 
         </div>
+
 
       </div>
 
+
+      <!-- ŠTEDNJA -->
 
       <div class="section-title">
         Moja štednja
       </div>
 
 
-      <div class="savings-card" onclick="savingsPage()">
+      <div
+        class="savings-card"
+        onclick="savingsPage()"
+      >
 
         <div class="savings-top">
+
 
           <div>
 
@@ -672,27 +1071,33 @@ function home(){
               🏦 Štedni račun
             </div>
 
+
             <div class="savings-value">
               ${money(state.savings)}
             </div>
 
           </div>
 
+
           <div class="savings-icon">
             →
           </div>
+
 
         </div>
 
       </div>
 
 
+      <!-- KATEGORIJE -->
+
       <div class="section-title">
-        Troškovi po kategorijama
+        Troškovi po kategorijama — ${monthTitle()}
       </div>
 
 
       <div class="categories">
+
   `;
 
 
@@ -709,9 +1114,11 @@ function home(){
           ${c[0]}
         </div>
 
+
         <div class="category-name">
           ${c[1]}
         </div>
+
 
         <div class="category-total">
           ${money(categoryTotal(c[1]))}
@@ -729,28 +1136,35 @@ function home(){
       </div>
 
     </div>
+
   `;
 
 
-  document.getElementById("app").innerHTML = html;
+  document.getElementById(
+    "app"
+  ).innerHTML = html;
+
 }
 
 
-/* =========================
+/* =========================================
    NOVI UNOS
-========================= */
+========================================= */
 
 function addPage(){
 
   currentType = "expense";
 
-  document.getElementById("headerTitle").textContent =
-    "Novi unos";
+
+  document.getElementById(
+    "headerTitle"
+  ).textContent = "Novi unos";
 
 
   let html = `
 
     <div class="page">
+
 
       <button
         class="back"
@@ -770,6 +1184,7 @@ function addPage(){
 
         <div class="type-buttons">
 
+
           <button
             id="incomeBtn"
             class="type-btn"
@@ -787,12 +1202,30 @@ function addPage(){
             📉 Trošak
           </button>
 
+
+        </div>
+
+
+        <label>
+          Datum
+        </label>
+
+
+        <div class="date-box">
+
+          <input
+            id="entryDate"
+            type="date"
+            value="${todayISO()}"
+          >
+
         </div>
 
 
         <label>
           Iznos
         </label>
+
 
         <input
           id="amount"
@@ -805,6 +1238,7 @@ function addPage(){
         <label>
           Opis
         </label>
+
 
         <input
           id="description"
@@ -826,7 +1260,11 @@ function addPage(){
 
               <option
                 value="${c[1]}"
-                ${selectedCategory === c[1] ? "selected" : ""}
+                ${
+                  selectedCategory === c[1]
+                    ? "selected"
+                    : ""
+                }
               >
                 ${c[0]} ${c[1]}
               </option>
@@ -853,70 +1291,108 @@ function addPage(){
   `;
 
 
-  document.getElementById("app").innerHTML = html;
+  document.getElementById(
+    "app"
+  ).innerHTML = html;
+
 }
 
 
-/*
-  Ako smo ušli u Unos direktno sa početne,
-  vraćamo se na početnu.
-
-  Ako smo došli iz određene kategorije,
-  vraćamo se baš u tu kategoriju.
-*/
+/* =========================================
+   POVRATAK IZ UNOSA
+========================================= */
 
 function goBackFromAdd(){
 
   if(selectedCategory){
-    categoryPage(selectedCategory);
+
+    categoryPage(
+      selectedCategory
+    );
+
   }else{
+
     home();
+
   }
 
 }
 
 
-/* =========================
+/* =========================================
    TIP UNOSA
-========================= */
+========================================= */
 
 function setType(type){
 
   currentType = type;
 
 
-  document.getElementById("incomeBtn").className =
+  document.getElementById(
+    "incomeBtn"
+  ).className =
     "type-btn" +
-    (type === "income" ? " active-income" : "");
+    (
+      type === "income"
+        ? " active-income"
+        : ""
+    );
 
 
-  document.getElementById("expenseBtn").className =
+  document.getElementById(
+    "expenseBtn"
+  ).className =
     "type-btn" +
-    (type === "expense" ? " active-expense" : "");
+    (
+      type === "expense"
+        ? " active-expense"
+        : ""
+    );
 
 
-  document.getElementById("categoryBox").style.display =
+  document.getElementById(
+    "categoryBox"
+  ).style.display =
     type === "expense"
       ? "block"
       : "none";
+
 }
 
 
-/* =========================
-   ČUVANJE UNOSA
-========================= */
+/* =========================================
+   ČUVANJE NOVOG UNOSA
+========================================= */
 
 function addEntry(){
 
   const amount =
-    Number(document.getElementById("amount").value);
+    Number(
+      document.getElementById(
+        "amount"
+      ).value
+    );
 
 
   const description =
-    document
-      .getElementById("description")
-      .value
-      .trim();
+    document.getElementById(
+      "description"
+    ).value.trim();
+
+
+  const date =
+    document.getElementById(
+      "entryDate"
+    ).value;
+
+
+  if(!date){
+
+    alert("Izaberi datum.");
+
+    return;
+
+  }
 
 
   if(!amount || amount <= 0){
@@ -924,6 +1400,7 @@ function addEntry(){
     alert("Unesi iznos.");
 
     return;
+
   }
 
 
@@ -932,6 +1409,7 @@ function addEntry(){
     alert("Unesi opis.");
 
     return;
+
   }
 
 
@@ -941,7 +1419,9 @@ function addEntry(){
   if(currentType === "expense"){
 
     category =
-      document.getElementById("category").value;
+      document.getElementById(
+        "category"
+      ).value;
 
   }
 
@@ -958,7 +1438,9 @@ function addEntry(){
 
     category: category,
 
-    date: today()
+    date: date,
+
+    fromSavings: false
 
   });
 
@@ -967,52 +1449,67 @@ function addEntry(){
 
 
   /*
-    Posle čuvanja brišemo izabranu kategoriju
-    da sledeći direktni unos ne bi slučajno
-    nasledio prethodnu kategoriju.
+    Posle čuvanja više nismo
+    zaključani na prethodnu kategoriju.
   */
 
   selectedCategory = "";
 
 
+  /*
+    Prebacujemo prikaz na mesec
+    u kome je unos napravljen.
+  */
+
+  selectedMonth =
+    date.substring(0,7);
+
+
   home();
+
 }
 
 
-/* =========================
+/* =========================================
    STRANICA KATEGORIJE
-========================= */
+========================================= */
 
 function categoryPage(name){
 
   /*
-    KLJUČNA ISPRAVKA:
+    OVO JE VAŽNO:
 
-    Čim korisnik uđe u kategoriju,
-    zapamtimo tu kategoriju.
+    Kada uđeš u Kuća,
+    selectedCategory = Kuća.
 
-    Ako zatim pritisne "Unos",
-    forma će automatski imati tu kategoriju.
+    Kada zatim klikneš Unos,
+    kategorija će automatski biti Kuća.
   */
 
   selectedCategory = name;
 
 
   const list =
-    state.entries.filter(
-      e =>
-        e.type === "expense" &&
-        e.category === name
+    state.entries.filter(e =>
+
+      e.type === "expense" &&
+
+      e.category === name &&
+
+      isInSelectedMonth(e.date)
+
     );
 
 
-  document.getElementById("headerTitle").textContent =
-    name;
+  document.getElementById(
+    "headerTitle"
+  ).textContent = name;
 
 
   let html = `
 
     <div class="page">
+
 
       <button
         class="back"
@@ -1039,7 +1536,7 @@ function categoryPage(name){
     html += `
 
       <div class="empty">
-        Nema unosa u ovoj kategoriji.
+        Nema unosa u ${monthTitle()}.
       </div>
 
     `;
@@ -1064,32 +1561,35 @@ function categoryPage(name){
   `;
 
 
-  document.getElementById("app").innerHTML =
-    html;
+  document.getElementById(
+    "app"
+  ).innerHTML = html;
+
 }
 
 
-/* =========================
+/* =========================================
    ISTORIJA UPLATA / TROŠKOVA
-========================= */
+========================================= */
 
 function historyPage(type){
-
-  /*
-    Ako otvorimo istoriju,
-    više nismo u konkretnoj kategoriji.
-  */
 
   selectedCategory = "";
 
 
   const list =
-    state.entries.filter(
-      e => e.type === type
+    state.entries.filter(e =>
+
+      e.type === type &&
+
+      isInSelectedMonth(e.date)
+
     );
 
 
-  document.getElementById("headerTitle").textContent =
+  document.getElementById(
+    "headerTitle"
+  ).textContent =
     type === "income"
       ? "Uplate"
       : "Troškovi";
@@ -1098,6 +1598,7 @@ function historyPage(type){
   let html = `
 
     <div class="page">
+
 
       <button
         class="back"
@@ -1117,6 +1618,11 @@ function historyPage(type){
 
       </div>
 
+
+      <div class="section-title">
+        ${monthTitle()}
+      </div>
+
   `;
 
 
@@ -1125,7 +1631,7 @@ function historyPage(type){
     html += `
 
       <div class="empty">
-        Nema unosa.
+        Nema unosa za ${monthTitle()}.
       </div>
 
     `;
@@ -1146,14 +1652,16 @@ function historyPage(type){
   html += `</div>`;
 
 
-  document.getElementById("app").innerHTML =
-    html;
+  document.getElementById(
+    "app"
+  ).innerHTML = html;
+
 }
 
 
-/* =========================
+/* =========================================
    STAVKA ISTORIJE
-========================= */
+========================================= */
 
 function historyItem(e){
 
@@ -1161,7 +1669,9 @@ function historyItem(e){
 
     <div class="history-item">
 
+
       <div class="history-left">
+
 
         <div class="history-desc">
           ${escapeHtml(e.description)}
@@ -1170,19 +1680,22 @@ function historyItem(e){
 
         <div class="history-date">
 
-          ${e.date}
+          ${formatDate(e.date)}
 
-          ${e.category
-            ? " • " + e.category
-            : ""
+          ${
+            e.category
+              ? " • " + e.category
+              : ""
           }
 
         </div>
+
 
       </div>
 
 
       <div class="history-right">
+
 
         <div class="${
           e.type === "income"
@@ -1194,7 +1707,9 @@ function historyItem(e){
             e.type === "income"
               ? "+"
               : "-"
-          }${money(e.amount)}
+          }
+
+          ${money(e.amount)}
 
         </div>
 
@@ -1206,17 +1721,20 @@ function historyItem(e){
           Obriši
         </button>
 
+
       </div>
+
 
     </div>
 
   `;
+
 }
 
 
-/* =========================
+/* =========================================
    BRISANJE UNOSA
-========================= */
+========================================= */
 
 function deleteEntry(id){
 
@@ -1231,7 +1749,11 @@ function deleteEntry(id){
   }
 
 
-  if(!confirm("Obrisati ovaj unos?")){
+  if(
+    !confirm(
+      "Obrisati ovaj unos?"
+    )
+  ){
     return;
   }
 
@@ -1258,22 +1780,25 @@ function deleteEntry(id){
 }
 
 
-/* =========================
+/* =========================================
    ŠTEDNI RAČUN
-========================= */
+========================================= */
 
 function savingsPage(){
 
   selectedCategory = "";
 
 
-  document.getElementById("headerTitle").textContent =
+  document.getElementById(
+    "headerTitle"
+  ).textContent =
     "Štedni račun";
 
 
   let html = `
 
     <div class="page">
+
 
       <button
         class="back"
@@ -1290,6 +1815,7 @@ function savingsPage(){
 
       <div class="balance-card">
 
+
         <div class="balance-title">
           Trenutno stanje štednje
         </div>
@@ -1299,10 +1825,12 @@ function savingsPage(){
           ${money(state.savings)}
         </div>
 
+
       </div>
 
 
       <div class="saving-buttons">
+
 
         <button
           class="primary"
@@ -1318,6 +1846,7 @@ function savingsPage(){
         >
           − Povuci
         </button>
+
 
       </div>
 
@@ -1338,7 +1867,7 @@ function savingsPage(){
     html += `
 
       <div class="empty">
-        Nema još aktivnosti na štednom računu.
+        Nema aktivnosti na štednom računu.
       </div>
 
     `;
@@ -1353,7 +1882,9 @@ function savingsPage(){
 
           <div class="history-item">
 
+
             <div class="history-left">
+
 
               <div class="history-desc">
                 ${escapeHtml(x.description)}
@@ -1361,29 +1892,55 @@ function savingsPage(){
 
 
               <div class="history-date">
-                ${x.date}
+
+                ${formatDate(
+                  x.date
+                )}
+
               </div>
+
 
             </div>
 
 
             <div class="history-right">
 
-              <div class="${
-                x.type === "deposit"
-                  ? "income"
-                  : "expense"
-              }">
 
-                ${
-                  x.type === "deposit"
-                    ? "+"
-                    : "-"
-                }${money(x.amount)}
+              ${
+                x.type === "initial"
 
-              </div>
+                ? `
+
+                  <div>
+                    ${money(x.amount)}
+                  </div>
+
+                `
+
+                : `
+
+                  <div class="${
+                    x.type === "deposit"
+                      ? "income"
+                      : "expense"
+                  }">
+
+                    ${
+                      x.type === "deposit"
+                        ? "+"
+                        : "-"
+                    }
+
+                    ${money(x.amount)}
+
+                  </div>
+
+                `
+              }
+
 
             </div>
+
 
           </div>
 
@@ -1397,24 +1954,31 @@ function savingsPage(){
   html += `</div>`;
 
 
-  document.getElementById("app").innerHTML =
-    html;
+  document.getElementById(
+    "app"
+  ).innerHTML = html;
+
 }
 
 
-/* =========================
+/* =========================================
    UPLATA NA ŠTEDNJU
-========================= */
+========================================= */
 
 function savingDepositPage(){
 
-  document.getElementById("headerTitle").textContent =
+  document.getElementById(
+    "headerTitle"
+  ).textContent =
     "Uplata na štednju";
 
 
-  document.getElementById("app").innerHTML = `
+  document.getElementById(
+    "app"
+  ).innerHTML = `
 
     <div class="page">
+
 
       <button
         class="back"
@@ -1431,16 +1995,29 @@ function savingDepositPage(){
 
       <div class="notice">
 
-        Ovaj novac se skida sa redovnog računa
+        Novac se skida sa redovnog računa
         i prebacuje na štedni račun.
 
-        Ne računa se kao novi prihod
+        Ne predstavlja novi prihod
         i nije trošak.
 
       </div>
 
 
       <div class="form-card">
+
+
+        <label>
+          Datum
+        </label>
+
+
+        <input
+          id="savingDate"
+          type="date"
+          value="${todayISO()}"
+        >
+
 
         <label>
           Iznos
@@ -1474,27 +2051,50 @@ function savingDepositPage(){
           Prebaci u štednju
         </button>
 
+
       </div>
+
 
     </div>
 
   `;
+
 }
 
+
+/* =========================================
+   ČUVANJE UPLATE U ŠTEDNJU
+========================================= */
 
 function saveSavingDeposit(){
 
   const amount =
     Number(
-      document.getElementById("savingAmount").value
+      document.getElementById(
+        "savingAmount"
+      ).value
     );
 
 
   const description =
-    document
-      .getElementById("savingDescription")
-      .value
-      .trim();
+    document.getElementById(
+      "savingDescription"
+    ).value.trim();
+
+
+  const date =
+    document.getElementById(
+      "savingDate"
+    ).value;
+
+
+  if(!date){
+
+    alert("Izaberi datum.");
+
+    return;
+
+  }
 
 
   if(!amount || amount <= 0){
@@ -1502,6 +2102,7 @@ function saveSavingDeposit(){
     alert("Unesi iznos.");
 
     return;
+
   }
 
 
@@ -1512,6 +2113,7 @@ function saveSavingDeposit(){
     );
 
     return;
+
   }
 
 
@@ -1520,13 +2122,19 @@ function saveSavingDeposit(){
     alert("Unesi opis.");
 
     return;
+
   }
 
 
   /*
-    Novac se skida sa redovnog računa
-    kroz obračun regularBalance()
-    i prebacuje u štednju.
+    Uplata na štednju:
+
+    redovan račun - iznos
+
+    štednja + iznos
+
+    nije prihod
+    nije trošak
   */
 
   state.savings += amount;
@@ -1542,7 +2150,7 @@ function saveSavingDeposit(){
 
     description: description,
 
-    date: today()
+    date: date
 
   });
 
@@ -1551,22 +2159,28 @@ function saveSavingDeposit(){
 
 
   savingsPage();
+
 }
 
 
-/* =========================
+/* =========================================
    POVLAČENJE SA ŠTEDNJE
-========================= */
+========================================= */
 
 function savingWithdrawPage(){
 
-  document.getElementById("headerTitle").textContent =
+  document.getElementById(
+    "headerTitle"
+  ).textContent =
     "Povlačenje sa štednje";
 
 
-  document.getElementById("app").innerHTML = `
+  document.getElementById(
+    "app"
+  ).innerHTML = `
 
     <div class="page">
+
 
       <button
         class="back"
@@ -1586,13 +2200,28 @@ function savingWithdrawPage(){
         Novac koji povučeš sa štednje
         smatra se potrošenim.
 
-        Zbog toga povećava Troškove,
-        ali se NE vraća na redovni račun.
+        Štednja se smanjuje,
+        Troškovi se povećavaju,
+        ali se novac NE dodaje
+        na redovan račun.
 
       </div>
 
 
       <div class="form-card">
+
+
+        <label>
+          Datum
+        </label>
+
+
+        <input
+          id="savingDate"
+          type="date"
+          value="${todayISO()}"
+        >
+
 
         <label>
           Iznos
@@ -1628,7 +2257,14 @@ function savingWithdrawPage(){
 
           ${categories.map(c=>`
 
-            <option value="${c[1]}">
+            <option
+              value="${c[1]}"
+              ${
+                selectedCategory === c[1]
+                  ? "selected"
+                  : ""
+              }
+            >
               ${c[0]} ${c[1]}
             </option>
 
@@ -1644,31 +2280,56 @@ function savingWithdrawPage(){
           Potroši sa štednje
         </button>
 
+
       </div>
+
 
     </div>
 
   `;
+
 }
 
+
+/* =========================================
+   ČUVANJE POVLAČENJA SA ŠTEDNJE
+========================================= */
 
 function saveSavingWithdraw(){
 
   const amount =
     Number(
-      document.getElementById("savingAmount").value
+      document.getElementById(
+        "savingAmount"
+      ).value
     );
 
 
   const description =
-    document
-      .getElementById("savingDescription")
-      .value
-      .trim();
+    document.getElementById(
+      "savingDescription"
+    ).value.trim();
+
+
+  const date =
+    document.getElementById(
+      "savingDate"
+    ).value;
 
 
   const category =
-    document.getElementById("savingCategory").value;
+    document.getElementById(
+      "savingCategory"
+    ).value;
+
+
+  if(!date){
+
+    alert("Izaberi datum.");
+
+    return;
+
+  }
 
 
   if(!amount || amount <= 0){
@@ -1676,6 +2337,7 @@ function saveSavingWithdraw(){
     alert("Unesi iznos.");
 
     return;
+
   }
 
 
@@ -1686,6 +2348,7 @@ function saveSavingWithdraw(){
     );
 
     return;
+
   }
 
 
@@ -1694,33 +2357,21 @@ function saveSavingWithdraw(){
     alert("Unesi opis.");
 
     return;
+
   }
 
 
   /*
-    KLJUČNA LOGIKA:
+    ŠTEDNJA - iznos
 
-    Štednja se smanjuje.
+    TROŠKOVI + iznos
 
-    Redovan račun OSTAJE ISTI.
+    REDOVAN RAČUN NE MENJAMO.
 
-    Pravi se trošak.
-
-    Zato se Troškovi povećavaju,
-    ali se redovan račun ne povećava.
-
-    Primer:
-
-    Redovan račun = 80.000
-    Štednja = 20.000
-
-    Potrošimo 20.000 iz štednje:
-
-    Redovan račun = 80.000
-    Štednja = 0
-    Troškovi +20.000
+    Zato što je novac već bio skinut
+    sa redovnog računa kada je prebačen
+    na štednju.
   */
-
 
   state.savings -= amount;
 
@@ -1737,7 +2388,7 @@ function saveSavingWithdraw(){
 
     category: category,
 
-    date: today(),
+    date: date,
 
     fromSavings: true
 
@@ -1754,7 +2405,7 @@ function saveSavingWithdraw(){
 
     description: description,
 
-    date: today(),
+    date: date,
 
     category: category
 
@@ -1764,75 +2415,113 @@ function saveSavingWithdraw(){
   saveState();
 
 
+  selectedMonth =
+    date.substring(0,7);
+
+
   savingsPage();
+
 }
 
 
-/* =========================
+/* =========================================
    TAMNA / SVETLA TEMA
-========================= */
+========================================= */
 
 function toggleTheme(){
 
-  document.body.classList.toggle("dark");
+  document.body.classList.toggle(
+    "dark"
+  );
 
 
   const dark =
-    document.body.classList.contains("dark");
+    document.body.classList.contains(
+      "dark"
+    );
 
 
   localStorage.setItem(
     "mojNovcanikTheme",
-    dark ? "dark" : "light"
+    dark
+      ? "dark"
+      : "light"
   );
 
 
-  document.getElementById("themeBtn").textContent =
-    dark ? "☀️" : "🌙";
+  document.getElementById(
+    "themeBtn"
+  ).textContent =
+    dark
+      ? "☀️"
+      : "🌙";
+
 }
 
 
 function loadTheme(){
 
   const theme =
-    localStorage.getItem("mojNovcanikTheme");
+    localStorage.getItem(
+      "mojNovcanikTheme"
+    );
 
 
   if(theme === "dark"){
 
-    document.body.classList.add("dark");
+    document.body.classList.add(
+      "dark"
+    );
 
-    document.getElementById("themeBtn").textContent =
-      "☀️";
+
+    document.getElementById(
+      "themeBtn"
+    ).textContent = "☀️";
 
   }
 
 }
 
 
-/* =========================
+/* =========================================
    ZAŠTITA TEKSTA
-========================= */
+========================================= */
 
 function escapeHtml(text){
 
   return String(text)
 
-    .replace(/&/g,"&amp;")
+    .replace(
+      /&/g,
+      "&amp;"
+    )
 
-    .replace(/</g,"&lt;")
+    .replace(
+      /</g,
+      "&lt;"
+    )
 
-    .replace(/>/g,"&gt;")
+    .replace(
+      />/g,
+      "&gt;"
+    )
 
-    .replace(/"/g,"&quot;")
+    .replace(
+      /"/g,
+      "&quot;"
+    )
 
-    .replace(/'/g,"&#039;");
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
 }
 
 
-/* =========================
+/* =========================================
    START
-========================= */
+========================================= */
 
 loadTheme();
 
