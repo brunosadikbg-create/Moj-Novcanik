@@ -1,1 +1,251 @@
-<!doctype html><html lang="sr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111827"><title>Moj Novčanik</title><style>:root{--bg:#f5f7f8;--card:#fff;--text:#17202a;--muted:#7b8794;--green:#35b779;--red:#ef6b73;--line:#e8ecef}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}.app{max-width:520px;margin:auto;min-height:100vh;padding-bottom:75px}header{background:#fff;padding:20px 18px 14px;border-bottom:1px solid var(--line)}.brand{font-size:28px;font-weight:800}.sub{color:var(--muted);font-size:14px}.month{margin-top:14px;display:flex;justify-content:space-between;align-items:center;background:#f1f4f5;border-radius:14px;padding:9px 12px}.month button{border:0;background:none;font-size:22px;padding:4px 12px}main{padding:16px}.hero{background:#fff;border-radius:24px;padding:20px;box-shadow:0 8px 24px #14202a12}.balance{text-align:center}.balance small{color:var(--muted)}.balance h1{font-size:34px;margin:4px 0}.balance p{color:var(--muted);margin:0}.donut{width:190px;height:190px;border-radius:50%;margin:20px auto;display:grid;place-items:center;position:relative}.donut:after{content:"";position:absolute;width:128px;height:128px;background:#fff;border-radius:50%}.donut span{position:relative;z-index:1;font-weight:800;text-align:center}.donut small{display:block;color:var(--muted);font-weight:500}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#f7f9fa;border-radius:16px;padding:13px}.stat small{color:var(--muted)}.stat b{display:block;font-size:18px;margin-top:4px}.income b{color:var(--green)}.expense b{color:var(--red)}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.actions button{border:0;border-radius:15px;padding:14px;font-weight:800;font-size:15px}.addIncome{background:#dff6ea;color:#198754}.addExpense{background:#ffe3e6;color:#c94d59}h2{font-size:19px;margin:24px 2px 12px}.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.cat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:13px 7px;text-align:center}.ico{font-size:27px}.cat b{display:block;font-size:13px;margin-top:5px}.cat small{color:var(--muted)}nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line)}nav>div{max-width:520px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr)}nav button{border:0;background:none;padding:10px;font-size:12px;color:var(--muted)}nav button span{display:block;font-size:21px}.sheet{display:none;position:fixed;inset:0;background:#0006;align-items:flex-end;z-index:5}.sheet.show{display:flex}.modal{background:#fff;width:100%;max-width:520px;margin:auto;border-radius:24px 24px 0 0;padding:20px}.close{float:right;border:0;border-radius:50%;width:34px;height:34px}.modal input,.modal select{width:100%;padding:13px;border:1px solid #dfe4e7;border-radius:12px;font-size:16px;margin:7px 0 12px}.save{width:100%;border:0;border-radius:13px;padding:14px;background:#17202a;color:#fff;font-weight:800}.list{background:#fff;border-radius:18px;overflow:hidden}.row{display:flex;justify-content:space-between;padding:14px;border-bottom:1px solid var(--line)}.row small{display:block;color:var(--muted)}.plus{color:var(--green);font-weight:800}.minus{color:var(--red);font-weight:800}.empty{text-align:center;color:var(--muted);padding:30px}</style></head><body><div class="app"><header><div class="brand">Moj Novčanik</div><div class="sub">Tvoj lični pregled novca</div><div class="month"><button onclick="move(-1)">‹</button><strong id="month"></strong><button onclick="move(1)">›</button></div></header><main id="main"></main><nav><div><button onclick="home()"><span>🏠</span>Početna</button><button onclick="historyPage()"><span>📋</span>Istorija</button><button onclick="openModal('expense')"><span>＋</span>Unos</button></div></nav></div><div class="sheet" id="sheet"><div class="modal"><button class="close" onclick="closeModal()">×</button><h2 id="title">Novi trošak</h2><label>Iznos (RSD)</label><input id="amount" type="number" min="1" placeholder="npr. 2500"><label>Kategorija</label><select id="category"></select><label>Opis</label><input id="note" placeholder="npr. račun, članarina..."><button class="save" onclick="saveEntry()">Sačuvaj</button></div></div><script>const cats=[['🍎','Hrana'],['🚗','Auto'],['🏠','Kuća'],['👕','Odeća'],['💊','Zdravlje'],['📱','Telefon'],['🧾','Sitni računi'],['⚽','Sport'],['🎁','Pokloni'],['🧴','Lično'],['💳','Rate'],['📦','Ostalo']];let s=JSON.parse(localStorage.getItem('mojNovcanik')||'{"entries":[]}'),d=new Date(),mode='expense';d.setDate(1);const money=n=>new Intl.NumberFormat('sr-RS').format(Math.round(n))+' RSD',key=()=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),name=()=>new Intl.DateTimeFormat('sr-Latn-RS',{month:'long',year:'numeric'}).format(d).replace(/^./,x=>x.toUpperCase()),entries=()=>s.entries.filter(e=>e.date.startsWith(key()));function totals(){let a=entries();return{inc:a.filter(x=>x.type==='income').reduce((q,x)=>q+x.amount,0),exp:a.filter(x=>x.type==='expense').reduce((q,x)=>q+x.amount,0)}}function home(){document.getElementById('month').textContent=name();let t=totals(),p=t.inc?Math.min(100,t.exp/t.inc*100):0;document.getElementById('main').innerHTML='<section class="hero"><div class="balance"><small>Stanje ovog meseca</small><h1>'+money(t.inc-t.exp)+'</h1><p>'+p.toFixed(1)+'% primanja potrošeno</p></div><div class="donut" style="background:conic-gradient(var(--red) 0deg '+p*3.6+'deg,#dfe5e8 '+p*3.6+'deg 360deg)"><span>'+Math.round(p)+'%<small>potrošeno</small></span></div><div class="stats"><div class="stat income"><small>Primanja</small><b>'+money(t.inc)+'</b></div><div class="stat expense"><small>Troškovi</small><b>'+money(t.exp)+'</b></div></div><div class="actions"><button class="addIncome" onclick="openModal(\'income\')">＋ Primanje</button><button class="addExpense" onclick="openModal(\'expense\')">− Trošak</button></div></section><h2>Kategorije</h2><div class="cats">'+cats.map(c=>{let n=entries().filter(x=>x.category===c[1]&&x.type==='expense').reduce((q,x)=>q+x.amount,0);return '<div class="cat"><div class="ico">'+c[0]+'</div><b>'+c[1]+'</b><small>'+money(n)+'</small></div>'}).join('')+'</div>'}function historyPage(){document.getElementById('month').textContent=name();let a=entries().slice().reverse();document.getElementById('main').innerHTML='<h2>Istorija — '+name()+'</h2><div class="list">'+(a.length?a.map(e=>'<div class="row"><div><b>'+e.category+'</b><small>'+(e.note||'Bez opisa')+' · '+e.date.slice(8,10)+'.'+e.date.slice(5,7)+'.</small></div><div class="'+(e.type==='income'?'plus':'minus')+'">'+(e.type==='income'?'+':'−')+' '+money(e.amount)+'</div></div>').join(''):'<div class="empty">Nema unosa za ovaj mesec.</div>')+'</div>'}function move(x){d.setMonth(d.getMonth()+x);home()}function openModal(t){mode=t;document.getElementById('title').textContent=t==='income'?'Novo primanje':'Novi trošak';document.getElementById('category').innerHTML=(t==='income'?[['💰','Plata'],['💼','Dodatni prihod'],['📦','Ostalo']]:cats).map(c=>'<option value="'+c[1]+'">'+c[0]+' '+c[1]+'</option>').join('');document.getElementById('amount').value='';document.getElementById('note').value='';document.getElementById('sheet').classList.add('show')}function closeModal(){document.getElementById('sheet').classList.remove('show')}function saveEntry(){let a=Number(document.getElementById('amount').value);if(!a||a<1)return alert('Unesi iznos.');s.entries.push({id:Date.now(),type:mode,amount:a,category:document.getElementById('category').value,note:document.getElementById('note').value.trim(),date:key()+'-'+String(new Date().getDate()).padStart(2,'0')});localStorage.setItem('mojNovcanik',JSON.stringify(s));closeModal();home()}home();</script></body></html>
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>Moj Novčanik</title>
+
+<style>
+:root{
+--bg:#f5f7f8;
+--card:#fff;
+--text:#17202a;
+--muted:#7b8794;
+--green:#35b779;
+--red:#ef6b73;
+--line:#e8ecef
+}
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:system-ui,-apple-system,Segoe UI,sans-serif;
+background:var(--bg);
+color:var(--text)
+}
+.app{
+max-width:520px;
+margin:auto;
+min-height:100vh;
+padding-bottom:75px
+}
+header{
+background:#fff;
+padding:20px 18px 14px;
+border-bottom:1px solid var(--line)
+}
+.brand{
+font-size:28px;
+font-weight:800
+}
+.sub{
+color:var(--muted);
+font-size:14px
+}
+.month{
+margin-top:14px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#f1f4f5;
+border-radius:14px;
+padding:9px 12px
+}
+.month button{
+border:0;
+background:none;
+font-size:22px;
+padding:4px 12px
+}
+main{
+padding:16px
+}
+.hero{
+background:#fff;
+border-radius:24px;
+padding:20px;
+box-shadow:0 8px 24px #14202a12
+}
+.balance{
+text-align:center
+}
+.balance small{
+color:var(--muted)
+}
+.balance h1{
+font-size:34px;
+margin:4px 0
+}
+.balance p{
+color:var(--muted);
+margin:0
+}
+.donut{
+width:190px;
+height:190px;
+border-radius:50%;
+margin:20px auto;
+display:grid;
+place-items:center;
+position:relative
+}
+.donut:after{
+content:"";
+position:absolute;
+width:128px;
+height:128px;
+background:#fff;
+border-radius:50%
+}
+.donut span{
+position:relative;
+z-index:1;
+font-weight:800;
+text-align:center
+}
+.donut small{
+display:block;
+color:var(--muted);
+font-weight:500
+}
+.stats{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px
+}
+.stat{
+background:#f7f9fa;
+border-radius:16px;
+padding:13px
+}
+.stat small{
+color:var(--muted)
+}
+.stat b{
+display:block;
+font-size:18px;
+margin-top:4px
+}
+.income b{
+color:var(--green)
+}
+.expense b{
+color:var(--red)
+}
+.actions{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:16px
+}
+.actions button{
+border:0;
+border-radius:15px;
+padding:14px;
+font-weight:800;
+font-size:15px
+}
+.addIncome{
+background:#dff6ea;
+color:#198754
+}
+.addExpense{
+background:#ffe3e6;
+color:#c94d59
+}
+h2{
+font-size:19px;
+margin:24px 2px 12px
+}
+.cats{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px
+}
+.cat{
+background:#fff;
+border:1px solid var(--line);
+border-radius:18px;
+padding:13px 7px;
+text-align:center;
+cursor:pointer
+}
+.cat:active{
+transform:scale(.97)
+}
+.ico{
+font-size:27px
+}
+.cat b{
+display:block;
+font-size:13px;
+margin-top:5px
+}
+.cat small{
+color:var(--muted)
+}
+nav{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:#fff;
+border-top:1px solid var(--line)
+}
+nav>div{
+max-width:520px;
+margin:auto;
+display:grid;
+grid-template-columns:repeat(3,1fr)
+}
+nav button{
+border:0;
+background:none;
+padding:10px;
+font-size:12px;
+color:var(--muted)
+}
+nav button span{
+display:block;
+font-size:21px
+}
+.sheet{
+display:none;
+position:fixed;
+inset:0;
+background:#0006;
+align-items:flex-end;
+z-index:5
+}
+.sheet.show{
+display:flex
+}
+.modal{
+background:#fff;
+width:100%;
+max-width:520px;
+margin:auto;
+border-radius:24px 24px 0 0;
+padding:20px
+}
+.close{
+float:right;
+border:0;
+border-radius:50%;
+width:34px;
+height:34px
+}
+.modal input,
+.modal select{
+width:100%;
+padding:13px;
+border:1px solid #dfe4e7;
+border-radius:12px;
+font-size:16px;
+margin:7px 0 12px
+}
+.save{
+width:100%;
+border:0;
+border-radius:13px;
+padding:
