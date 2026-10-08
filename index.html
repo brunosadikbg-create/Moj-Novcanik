@@ -5,186 +5,606 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#f5f7f8">
 <title>Moj Novčanik</title>
+
 <style>
 :root{
---bg:#f5f7f8;--card:#fff;--text:#17202a;--muted:#7b8794;
---green:#35b779;--red:#ef6b73;--blue:#3978dc;--line:#e8ecef;
---soft:#f1f4f5;--soft2:#f7f9fa;--overlay:rgba(0,0,0,.38)
+  color-scheme:light;
+  --bg:#f5f7f8;
+  --card:#fff;
+  --text:#17202a;
+  --muted:#7b8794;
+  --green:#35b779;
+  --red:#ef6b73;
+  --blue:#3978dc;
+  --line:#e8ecef;
+  --soft:#f0f3f5;
+  --soft2:#f3f5f7;
+  --overlay:rgba(0,0,0,.45)
 }
+
 body.dark{
---bg:#111827;--card:#1f2937;--text:#f3f4f6;--muted:#aeb7c2;
---green:#4ade80;--red:#fb7185;--blue:#60a5fa;--line:#374151;
---soft:#273244;--soft2:#253041;--overlay:rgba(0,0,0,.65)
+  color-scheme:dark;
+  --bg:#101418;
+  --card:#182027;
+  --text:#f2f5f7;
+  --muted:#9aa7b3;
+  --line:#29343d;
+  --soft:#222c34;
+  --soft2:#202a32;
+  --overlay:rgba(0,0,0,.7)
 }
+
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
-button,input,select{font:inherit}
-.app{max-width:540px;margin:auto;min-height:100vh;padding-bottom:78px}
-header{background:var(--card);padding:18px;border-bottom:1px solid var(--line)}
-.brandRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand{font-size:28px;font-weight:800}
-.sub{font-size:14px;color:var(--muted)}
-.themeBtn{border:0;background:var(--soft);color:var(--text);width:44px;height:44px;border-radius:14px;font-size:21px}
-.month{margin-top:14px;background:var(--soft);border-radius:14px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between}
-.month button{border:0;background:transparent;color:var(--text);font-size:25px;padding:4px 12px}
+
+html{color-scheme:light}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:system-ui,-apple-system,Segoe UI,sans-serif
+}
+
+.app{
+  max-width:540px;
+  margin:auto;
+  min-height:100vh;
+  padding-bottom:88px
+}
+
+header{
+  background:var(--card);
+  padding:20px 18px 14px;
+  border-bottom:1px solid var(--line)
+}
+
+.brandRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px
+}
+
+.brand{
+  font-size:28px;
+  font-weight:800
+}
+
+.sub{
+  font-size:14px;
+  color:var(--muted)
+}
+
+.themeBtn{
+  border:0;
+  background:var(--soft);
+  color:var(--text);
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  font-size:20px;
+  cursor:pointer
+}
+
+.month{
+  margin-top:14px;
+  background:var(--soft);
+  border-radius:14px;
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between
+}
+
+.month button{
+  border:0;
+  background:transparent;
+  font-size:25px;
+  padding:4px 12px;
+  color:var(--text)
+}
+
 main{padding:16px}
-.card,.saving,.categoryHead,.list{background:var(--card)}
-.card{border-radius:22px;padding:18px;box-shadow:0 6px 22px rgba(20,32,42,.07)}
+
+.card,.saving,.categoryHead,.list{
+  background:var(--card)
+}
+
+.card{
+  border-radius:22px;
+  padding:18px;
+  box-shadow:0 6px 22px rgba(20,32,42,.07)
+}
+
 .balance{text-align:center}
-.balance small{color:var(--muted)}
-.balance h1{font-size:34px;margin:5px 0}
-.balance p{margin:0;color:var(--muted)}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
-.stat{background:var(--soft2);border-radius:15px;padding:13px}
-.stat small{color:var(--muted)}
-.stat b{display:block;font-size:18px;margin-top:4px}
+
+.balance small,.saving small{
+  color:var(--muted)
+}
+
+.balance h1{
+  font-size:34px;
+  margin:5px 0
+}
+
+.balance p{
+  margin:0;
+  color:var(--muted)
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+  margin-top:18px
+}
+
+.stat{
+  background:var(--soft2);
+  border-radius:15px;
+  padding:12px 9px;
+  cursor:pointer;
+  text-align:center
+}
+
+.stat:active{transform:scale(.98)}
+
+.stat small{
+  color:var(--muted);
+  font-size:12px
+}
+
+.stat b{
+  display:block;
+  font-size:16px;
+  margin-top:4px
+}
+
 .income b{color:var(--green)}
 .expense b{color:var(--red)}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.actions button{border:0;border-radius:14px;padding:13px;font-weight:800}
-.addIncome{background:#dff6ea;color:#198754}
-.addExpense{background:#ffe3e6;color:#c94d59}
-.saving{margin-top:14px;border-radius:20px;padding:16px;border:1px solid var(--line);box-shadow:0 5px 18px rgba(20,32,42,.05)}
-.savingTop{display:flex;justify-content:space-between;align-items:center}
-.savingTitle{font-weight:800;font-size:17px}
-.savingAmount{font-size:25px;font-weight:800;color:var(--blue);margin-top:3px}
-.savingButtons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.savingButtons button{border:0;border-radius:12px;padding:11px;font-weight:700;background:#edf4ff;color:var(--blue)}
-body.dark .savingButtons button{background:#253653}
-h2{font-size:19px;margin:24px 2px 12px}
-.cats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.cat{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px;cursor:pointer}
-.catTop{display:flex;align-items:center;gap:10px}
+.savingStat b{color:var(--blue)}
+
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:12px
+}
+
+.actions button{
+  border:0;
+  border-radius:14px;
+  padding:13px;
+  font-weight:800
+}
+
+.addIncome{
+  background:#dff6ea;
+  color:#198754
+}
+
+.addExpense{
+  background:#ffe3e6;
+  color:#c94d59
+}
+
+.saving{
+  margin-top:14px;
+  border-radius:20px;
+  padding:16px;
+  border:1px solid var(--line);
+  box-shadow:0 5px 18px rgba(20,32,42,.05)
+}
+
+.savingTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center
+}
+
+.savingTitle{
+  font-weight:800;
+  font-size:17px
+}
+
+.savingAmount{
+  font-size:25px;
+  font-weight:800;
+  color:var(--blue);
+  margin-top:3px
+}
+
+.savingButtons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px
+}
+
+.savingButtons button{
+  border:0;
+  border-radius:12px;
+  padding:11px;
+  font-weight:700;
+  background:#edf4ff;
+  color:var(--blue)
+}
+
+h2{
+  font-size:19px;
+  margin:24px 2px 12px
+}
+
+.cats{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px
+}
+
+.cat{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:15px;
+  cursor:pointer
+}
+
+.cat:active{transform:scale(.98)}
+
+.catTop{
+  display:flex;
+  align-items:center;
+  gap:10px
+}
+
 .ico{font-size:28px}
+
 .cat b{font-size:15px}
-.cat small{display:block;color:var(--muted);margin-top:7px}
-.list{border-radius:18px;overflow:hidden}
-.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px;border-bottom:1px solid var(--line)}
+
+.cat small{
+  display:block;
+  color:var(--muted);
+  margin-top:7px
+}
+
+.list{
+  border-radius:18px;
+  overflow:hidden
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:14px;
+  border-bottom:1px solid var(--line)
+}
+
 .row:last-child{border-bottom:0}
+
 .rowLeft{min-width:0}
+
 .rowTitle{font-weight:750}
-.rowMeta{display:block;color:var(--muted);font-size:12px;margin-top:3px}
-.plus{color:var(--green);font-weight:800}
-.minus{color:var(--red);font-weight:800}
-.rowRight{text-align:right;white-space:nowrap}
-.delete{margin-top:5px;border:0;background:#fff0f1;color:#c94d59;border-radius:8px;padding:5px 8px;font-size:12px}
-body.dark .delete{background:#3b2027}
-.empty{text-align:center;color:var(--muted);padding:30px}
-.back{border:0;background:var(--card);color:var(--text);border-radius:12px;padding:10px 15px;font-weight:700;margin-bottom:15px}
-.categoryHead{border-radius:20px;padding:18px;margin-bottom:15px}
-.categoryHead .big{font-size:23px;font-weight:800}
-.categoryTotal{font-size:25px;font-weight:800;color:var(--red);margin-top:6px}
-nav{position:fixed;z-index:4;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line)}
-nav>div{max-width:540px;margin:auto;display:grid;grid-template-columns:repeat(2,1fr)}
-nav button{border:0;background:transparent;color:var(--muted);padding:10px;font-size:12px}
-nav button span{display:block;font-size:21px}
-.sheet{display:none;position:fixed;z-index:10;inset:0;background:var(--overlay);align-items:flex-end}
+
+.rowMeta{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  margin-top:3px
+}
+
+.plus{
+  color:var(--green);
+  font-weight:800
+}
+
+.minus{
+  color:var(--red);
+  font-weight:800
+}
+
+.blue{
+  color:var(--blue);
+  font-weight:800
+}
+
+.rowRight{
+  text-align:right;
+  white-space:nowrap
+}
+
+.delete{
+  margin-top:5px;
+  border:0;
+  background:var(--soft);
+  color:#c94d59;
+  border-radius:8px;
+  padding:5px 8px;
+  font-size:12px
+}
+
+.empty{
+  text-align:center;
+  color:var(--muted);
+  padding:30px
+}
+
+.back{
+  border:0;
+  background:var(--card);
+  color:var(--text);
+  border-radius:12px;
+  padding:10px 15px;
+  font-weight:700;
+  margin-bottom:15px
+}
+
+.categoryHead{
+  border-radius:20px;
+  padding:18px;
+  margin-bottom:15px
+}
+
+.categoryHead .big{
+  font-size:23px;
+  font-weight:800
+}
+
+.categoryTotal{
+  font-size:25px;
+  font-weight:800;
+  color:var(--red);
+  margin-top:6px
+}
+
+.historyHead{
+  border-radius:20px;
+  padding:18px;
+  margin-bottom:15px;
+  background:var(--card)
+}
+
+.historyHead .big{
+  font-size:23px;
+  font-weight:800
+}
+
+.historyTotal{
+  font-size:25px;
+  font-weight:800;
+  margin-top:6px
+}
+
+.greenTotal{color:var(--green)}
+.redTotal{color:var(--red)}
+.blueTotal{color:var(--blue)}
+
+nav{
+  position:fixed;
+  z-index:4;
+  bottom:0;
+  left:0;
+  right:0;
+  background:var(--card);
+  border-top:1px solid var(--line)
+}
+
+nav>div{
+  max-width:540px;
+  margin:auto;
+  display:grid;
+  grid-template-columns:1fr 1fr
+}
+
+nav button{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:12px;
+  padding:10px
+}
+
+nav button span{
+  display:block;
+  font-size:21px
+}
+
+.sheet{
+  display:none;
+  position:fixed;
+  z-index:10;
+  inset:0;
+  background:var(--overlay);
+  align-items:flex-end
+}
+
 .sheet.show{display:flex}
-.modal{width:100%;max-width:540px;margin:auto;background:var(--card);color:var(--text);border-radius:24px 24px 0 0;padding:20px}
-.modalHeader{display:flex;justify-content:space-between;align-items:center}
+
+.modal{
+  width:100%;
+  max-width:540px;
+  margin:auto;
+  background:var(--card);
+  border-radius:24px 24px 0 0;
+  padding:20px
+}
+
+.modalHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center
+}
+
 .modal h2{margin:0 0 12px}
-.close{border:0;background:var(--soft);color:var(--text);border-radius:50%;width:34px;height:34px}
-.modal label{display:block;font-size:13px;color:var(--muted);margin-top:9px}
-.modal input,.modal select{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;margin:6px 0 8px;background:var(--card);color:var(--text)}
-.save{width:100%;border:0;border-radius:13px;padding:14px;font-weight:800;background:#17202a;color:#fff;margin-top:8px}
+
+.close{
+  border:0;
+  background:var(--soft);
+  color:var(--text);
+  border-radius:50%;
+  width:34px;
+  height:34px
+}
+
+.modal label{
+  display:block;
+  font-size:13px;
+  color:var(--muted);
+  margin-top:9px
+}
+
+.modal input,.modal select{
+  width:100%;
+  padding:13px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  margin:6px 0 8px;
+  background:var(--card);
+  color:var(--text)
+}
+
+.save{
+  width:100%;
+  border:0;
+  border-radius:13px;
+  padding:14px;
+  font-weight:800;
+  background:#17202a;
+  color:#fff;
+  margin-top:8px
+}
 </style>
 </head>
 
 <body>
+
 <div class="app">
 
 <header>
-<div class="brandRow">
-<div>
-<div class="brand">Moj Novčanik</div>
-<div class="sub">Tvoj lični pregled novca</div>
-</div>
-<button class="themeBtn" id="themeBtn" onclick="toggleTheme()">🌙</button>
-</div>
+  <div class="brandRow">
+    <div>
+      <div class="brand">Moj Novčanik</div>
+      <div class="sub">Tvoj lični pregled novca</div>
+    </div>
+    <button class="themeBtn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+  </div>
 
-<div class="month">
-<button onclick="moveMonth(-1)">‹</button>
-<strong id="month"></strong>
-<button onclick="moveMonth(1)">›</button>
-</div>
+  <div class="month">
+    <button onclick="moveMonth(-1)">‹</button>
+    <strong id="month"></strong>
+    <button onclick="moveMonth(1)">›</button>
+  </div>
 </header>
 
 <main id="main"></main>
 
 <nav>
-<div>
-<button onclick="home()"><span>🏠</span>Početna</button>
-<button onclick="openEntryModal('expense')"><span>＋</span>Unos</button>
-</div>
+  <div>
+    <button onclick="home()">
+      <span>🏠</span>
+      Početna
+    </button>
+
+    <button onclick="openEntryModal('expense')">
+      <span>＋</span>
+      Unos
+    </button>
+  </div>
 </nav>
 
 </div>
 
+
+<!-- UNOS -->
 <div class="sheet" id="entrySheet">
-<div class="modal">
-<div class="modalHeader">
-<h2 id="entryTitle">Novi trošak</h2>
-<button class="close" onclick="closeSheet('entrySheet')">×</button>
+  <div class="modal">
+
+    <div class="modalHeader">
+      <h2 id="entryTitle">Novi trošak</h2>
+      <button class="close" onclick="closeSheet('entrySheet')">×</button>
+    </div>
+
+    <label>Iznos (RSD)</label>
+    <input id="amount" type="number" min="1" inputmode="decimal" placeholder="npr. 2500">
+
+    <label>Kategorija</label>
+    <select id="category"></select>
+
+    <label>Opis</label>
+    <input id="note" placeholder="npr. račun za struju">
+
+    <button class="save" onclick="saveEntry()">Sačuvaj</button>
+
+  </div>
 </div>
 
-<label>Iznos (RSD)</label>
-<input id="amount" type="number" min="1" inputmode="decimal" placeholder="npr. 2500">
 
-<label>Kategorija</label>
-<select id="category"></select>
-
-<label>Opis</label>
-<input id="note" placeholder="npr. račun za struju">
-
-<button class="save" onclick="saveEntry()">Sačuvaj</button>
-</div>
-</div>
-
+<!-- ŠTEDNJA -->
 <div class="sheet" id="savingSheet">
-<div class="modal">
-<div class="modalHeader">
-<h2 id="savingTitle">Štedni račun</h2>
-<button class="close" onclick="closeSheet('savingSheet')">×</button>
+  <div class="modal">
+
+    <div class="modalHeader">
+      <h2 id="savingTitle">Prebaci u štednju</h2>
+      <button class="close" onclick="closeSheet('savingSheet')">×</button>
+    </div>
+
+    <label>Iznos (RSD)</label>
+    <input id="savingAmountInput" type="number" min="1" inputmode="decimal" placeholder="npr. 12000">
+
+    <label>Opis</label>
+    <input id="savingNote" placeholder="npr. prebačeno u štednju">
+
+    <button class="save" onclick="saveSaving()">Sačuvaj</button>
+
+  </div>
 </div>
 
-<label>Iznos (RSD)</label>
-<input id="savingAmountInput" type="number" min="1" inputmode="decimal" placeholder="npr. 5000">
-
-<label>Opis</label>
-<input id="savingNote" placeholder="npr. prebačeno sa računa">
-
-<button class="save" onclick="saveSaving()">Sačuvaj</button>
-</div>
-</div>
 
 <script>
+
 const categories=[
-['🍎','Hrana'],
-['🏠','Kuća'],
-['🚗','Auto'],
-['💊','Zdravlje'],
-['👕','Garderoba'],
-['⚽','Sport'],
-['🎁','Pokloni'],
-['🧾','Sitni računi'],
-['🍸','Izlasci'],
-['✈️','Putovanje']
+  ['🍎','Hrana'],
+  ['🏠','Kuća'],
+  ['🚗','Auto'],
+  ['💊','Zdravlje'],
+  ['👕','Garderoba'],
+  ['⚽','Sport'],
+  ['🎁','Pokloni'],
+  ['🧾','Sitni računi'],
+  ['🍸','Izlasci'],
+  ['✈️','Putovanje']
 ];
 
 let state;
 
 try{
-state=JSON.parse(localStorage.getItem('mojNovcanik')||'{"entries":[],"savings":0}')
+  state=JSON.parse(
+    localStorage.getItem('mojNovcanik') ||
+    '{"entries":[],"savings":0,"savingHistory":[]}'
+  );
 }catch(e){
-state={entries:[],savings:0}
+  state={
+    entries:[],
+    savings:0,
+    savingHistory:[]
+  };
 }
 
-if(!Array.isArray(state.entries))state.entries=[];
-if(typeof state.savings!=='number')state.savings=0;
+if(!Array.isArray(state.entries))
+  state.entries=[];
+
+if(typeof state.savings!=='number')
+  state.savings=0;
+
+if(!Array.isArray(state.savingHistory))
+  state.savingHistory=[];
 
 state.entries.forEach(e=>{
-if(e.category==='Odeća')e.category='Garderoba'
+  if(e.category==='Odeća')
+    e.category='Garderoba';
 });
+
 
 let current=new Date();
 current.setDate(1);
@@ -192,419 +612,902 @@ current.setDate(1);
 let entryMode='expense';
 let savingMode='add';
 
+
 function money(n){
-return new Intl.NumberFormat('sr-RS').format(Math.round(Number(n)||0))+' RSD'
+  return new Intl.NumberFormat('sr-RS').format(
+    Math.round(Number(n)||0)
+  )+' RSD';
 }
+
 
 function monthKey(){
-return current.getFullYear()+'-'+String(current.getMonth()+1).padStart(2,'0')
+  return current.getFullYear()+
+    '-'+
+    String(current.getMonth()+1).padStart(2,'0');
 }
+
 
 function monthName(){
-return new Intl.DateTimeFormat('sr-Latn-RS',{
-month:'long',
-year:'numeric'
-}).format(current).replace(/^./,x=>x.toUpperCase())
+  return new Intl.DateTimeFormat(
+    'sr-Latn-RS',
+    {
+      month:'long',
+      year:'numeric'
+    }
+  ).format(current).replace(/^./,x=>x.toUpperCase());
 }
+
 
 function saveState(){
-localStorage.setItem('mojNovcanik',JSON.stringify(state))
+  localStorage.setItem(
+    'mojNovcanik',
+    JSON.stringify(state)
+  );
 }
+
 
 function monthEntries(){
-return state.entries.filter(e=>e.date&&e.date.startsWith(monthKey()))
+  return state.entries.filter(
+    e=>e.date && e.date.startsWith(monthKey())
+  );
 }
+
 
 function totals(){
-let a=monthEntries();
 
-return{
-income:a.filter(e=>e.type==='income').reduce((s,e)=>s+Number(e.amount||0),0),
-expense:a.filter(e=>e.type==='expense').reduce((s,e)=>s+Number(e.amount||0),0)
+  let a=monthEntries();
+
+  return {
+
+    income:a
+      .filter(e=>e.type==='income')
+      .reduce((s,e)=>s+Number(e.amount||0),0),
+
+    expense:a
+      .filter(e=>e.type==='expense')
+      .reduce((s,e)=>s+Number(e.amount||0),0)
+
+  };
 }
-}
+
 
 function esc(v){
-return String(v??'').replace(/[&<>"']/g,c=>({
-'&':'&amp;',
-'<':'&lt;',
-'>':'&gt;',
-'"':'&quot;',
-"'":'&#39;'
-}[c]))
+  return String(v??'').replace(
+    /[&<>"']/g,
+    c=>({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#39;'
+    }[c])
+  );
 }
+
 
 function dateText(d){
-let x=new Date(d+'T12:00:00');
-return isNaN(x)?d:x.toLocaleDateString('sr-RS')
+
+  let x=new Date(d+'T12:00:00');
+
+  return isNaN(x)
+    ? d
+    : x.toLocaleDateString('sr-RS');
 }
+
+
+/* TEMA */
 
 function applyTheme(){
-let dark=localStorage.getItem('mojNovcanikTheme')==='dark';
 
-document.body.classList.toggle('dark',dark);
+  const dark=
+    localStorage.getItem('mojNovcanikTheme')==='dark';
 
-document.getElementById('themeBtn').textContent=
-dark?'☀️':'🌙';
+  document.body.classList.toggle('dark',dark);
+
+  const b=document.getElementById('themeBtn');
+
+  if(b)
+    b.textContent=dark?'☀️':'🌙';
 }
+
 
 function toggleTheme(){
 
-let dark=!document.body.classList.contains('dark');
+  const dark=
+    document.body.classList.toggle('dark');
 
-document.body.classList.toggle('dark',dark);
+  localStorage.setItem(
+    'mojNovcanikTheme',
+    dark?'dark':'light'
+  );
 
-localStorage.setItem(
-'mojNovcanikTheme',
-dark?'dark':'light'
-);
+  const b=document.getElementById('themeBtn');
 
-document.getElementById('themeBtn').textContent=
-dark?'☀️':'🌙';
+  if(b)
+    b.textContent=dark?'☀️':'🌙';
 }
+
+
+/* POČETNA */
 
 function home(){
 
-document.getElementById('month').textContent=monthName();
+  document.getElementById('month').textContent=
+    monthName();
 
-let t=totals();
-let balance=t.income-t.expense;
+  let t=totals();
 
-document.getElementById('main').innerHTML=`
+  let balance=
+    t.income-
+    t.expense-
+    getSavingTransfersForMonth();
 
-<section class="card">
+  document.getElementById('main').innerHTML=`
 
-<div class="balance">
-<small>Stanje ovog meseca</small>
-<h1>${money(balance)}</h1>
-<p>Primanja minus troškovi</p>
-</div>
+    <section class="card">
 
-<div class="stats">
+      <div class="balance">
 
-<div class="stat income">
-<small>Primanja</small>
-<b>${money(t.income)}</b>
-</div>
+        <small>Stanje ovog meseca</small>
 
-<div class="stat expense">
-<small>Troškovi</small>
-<b>${money(t.expense)}</b>
-</div>
+        <h1>${money(balance)}</h1>
 
-</div>
+        <p>
+          Uplate minus troškovi i štednja
+        </p>
 
-<div class="actions">
+      </div>
 
-<button class="addIncome"
-onclick="openEntryModal('income')">
-＋ Primanje
-</button>
 
-<button class="addExpense"
-onclick="openEntryModal('expense')">
-− Trošak
-</button>
+      <div class="stats">
 
-</div>
+        <div class="stat income"
+             onclick="historyPage('income')">
 
-</section>
+          <small>Uplate</small>
 
-<section class="saving">
+          <b>${money(t.income)}</b>
 
-<div class="savingTop">
+        </div>
 
-<div>
-<div class="savingTitle">🏦 Štedni račun</div>
-<div class="savingAmount">${money(state.savings)}</div>
-</div>
 
-<div style="font-size:30px">💰</div>
+        <div class="stat expense"
+             onclick="historyPage('expense')">
 
-</div>
+          <small>Troškovi</small>
 
-<div class="savingButtons">
+          <b>${money(t.expense)}</b>
 
-<button onclick="openSavingModal('add')">
-＋ Dodaj u štednju
-</button>
+        </div>
 
-<button onclick="openSavingModal('withdraw')">
-− Povuci iz štednje
-</button>
 
-</div>
+        <div class="stat savingStat"
+             onclick="historyPage('saving')">
 
-</section>
+          <small>Štednja</small>
 
-<h2>Kategorije troškova</h2>
+          <b>
+            ${money(getSavingTransfersForMonth())}
+          </b>
 
-<div class="cats">
+        </div>
 
-${categories.map(c=>{
+      </div>
 
-let n=monthEntries()
-.filter(e=>e.type==='expense'&&e.category===c[1])
-.reduce((s,e)=>s+Number(e.amount||0),0);
 
-return `
+      <div class="actions">
 
-<div class="cat"
-onclick="categoryPage('${c[1]}')">
+        <button
+          class="addIncome"
+          onclick="openEntryModal('income')">
+          ＋ Uplata
+        </button>
 
-<div class="catTop">
-<span class="ico">${c[0]}</span>
-<b>${c[1]}</b>
-</div>
+        <button
+          class="addExpense"
+          onclick="openEntryModal('expense')">
+          − Trošak
+        </button>
 
-<small>${money(n)}</small>
+      </div>
 
-</div>
+    </section>
 
-`
 
-}).join('')}
+    <section class="saving">
 
-</div>
-`;
+      <div class="savingTop">
+
+        <div>
+
+          <div class="savingTitle">
+            🏦 Štedni račun
+          </div>
+
+          <div class="savingAmount">
+            ${money(state.savings)}
+          </div>
+
+        </div>
+
+        <div style="font-size:30px">
+          💰
+        </div>
+
+      </div>
+
+
+      <div class="savingButtons">
+
+        <button onclick="openSavingModal('add')">
+          ＋ Prebaci u štednju
+        </button>
+
+        <button onclick="openSavingModal('withdraw')">
+          − Povuci iz štednje
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <h2>Kategorije troškova</h2>
+
+    <div class="cats">
+
+      ${categories.map(c=>{
+
+        let n=
+          monthEntries()
+          .filter(e=>
+            e.type==='expense' &&
+            e.category===c[1]
+          )
+          .reduce(
+            (s,e)=>s+Number(e.amount||0),
+            0
+          );
+
+        return `
+
+          <div
+            class="cat"
+            onclick="categoryPage('${c[1]}')">
+
+            <div class="catTop">
+
+              <span class="ico">
+                ${c[0]}
+              </span>
+
+              <b>
+                ${c[1]}
+              </b>
+
+            </div>
+
+            <small>
+              ${money(n)}
+            </small>
+
+          </div>
+
+        `;
+
+      }).join('')}
+
+    </div>
+  `;
 }
+
+
+/* ŠTEDNJA - UKUPNO PREBAČENO U TOM MESECU */
+
+function getSavingTransfersForMonth(){
+
+  return state.savingHistory
+    .filter(x=>
+      x.type==='add' &&
+      x.date &&
+      x.date.startsWith(monthKey())
+    )
+    .reduce(
+      (s,x)=>s+Number(x.amount||0),
+      0
+    );
+}
+
+
+/* ISTORIJA */
+
+function historyPage(type){
+
+  document.getElementById('month').textContent=
+    monthName();
+
+  let title='';
+  let icon='';
+  let rows=[];
+  let total=0;
+
+  if(type==='income'){
+
+    title='Uplate';
+    icon='🟢';
+
+    rows=monthEntries()
+      .filter(e=>e.type==='income')
+      .slice()
+      .reverse();
+
+    total=rows.reduce(
+      (s,e)=>s+Number(e.amount||0),
+      0
+    );
+
+  }else if(type==='expense'){
+
+    title='Troškovi';
+    icon='🔴';
+
+    rows=monthEntries()
+      .filter(e=>e.type==='expense')
+      .slice()
+      .reverse();
+
+    total=rows.reduce(
+      (s,e)=>s+Number(e.amount||0),
+      0
+    );
+
+  }else{
+
+    title='Štednja';
+    icon='🏦';
+
+    rows=state.savingHistory
+      .filter(e=>
+        e.date &&
+        e.date.startsWith(monthKey())
+      )
+      .slice()
+      .reverse();
+
+    total=rows
+      .filter(e=>e.type==='add')
+      .reduce(
+        (s,e)=>s+Number(e.amount||0),
+        0
+      );
+  }
+
+
+  document.getElementById('main').innerHTML=`
+
+    <button
+      class="back"
+      onclick="home()">
+      ← Nazad
+    </button>
+
+
+    <div class="historyHead">
+
+      <div class="big">
+        ${icon} ${title}
+      </div>
+
+      <div class="
+        historyTotal
+        ${type==='income'
+          ?'greenTotal'
+          :type==='expense'
+          ?'redTotal'
+          :'blueTotal'}">
+
+        ${money(total)}
+
+      </div>
+
+      <small style="color:var(--muted)">
+        Istorija za ${monthName()}
+      </small>
+
+    </div>
+
+
+    <div class="list">
+
+      ${
+        rows.length
+        ? rows.map(e=>{
+
+            if(type==='saving'){
+
+              return `
+
+                <div class="row">
+
+                  <div class="rowLeft">
+
+                    <div class="rowTitle">
+                      ${e.type==='add'
+                        ?'Prebačeno u štednju'
+                        :'Povučeno iz štednje'}
+                    </div>
+
+                    <span class="rowMeta">
+                      ${esc(e.note||'Štedni račun')}
+                      · ${dateText(e.date)}
+                    </span>
+
+                  </div>
+
+
+                  <div class="rowRight">
+
+                    <div class="${
+                      e.type==='add'
+                      ?'blue'
+                      :'minus'
+                    }">
+
+                      ${e.type==='add'
+                        ?'+'
+                        :'−'}
+                      ${money(e.amount)}
+
+                    </div>
+
+                    <button
+                      class="delete"
+                      onclick="deleteSaving(${e.id})">
+                      Obriši
+                    </button>
+
+                  </div>
+
+                </div>
+
+              `;
+
+            }
+
+
+            return `
+
+              <div class="row">
+
+                <div class="rowLeft">
+
+                  <div class="rowTitle">
+                    ${esc(
+                      e.note ||
+                      e.category ||
+                      'Bez opisa'
+                    )}
+                  </div>
+
+                  <span class="rowMeta">
+                    ${esc(e.category||'')}
+                    · ${dateText(e.date)}
+                  </span>
+
+                </div>
+
+
+                <div class="rowRight">
+
+                  <div class="${
+                    e.type==='income'
+                    ?'plus'
+                    :'minus'
+                  }">
+
+                    ${e.type==='income'?'+':'−'}
+                    ${money(e.amount)}
+
+                  </div>
+
+                  <button
+                    class="delete"
+                    onclick="deleteEntry(${e.id})">
+                    Obriši
+                  </button>
+
+                </div>
+
+              </div>
+
+            `;
+
+          }).join('')
+
+        :'<div class="empty">Nema unosa za ovaj mesec.</div>'
+      }
+
+    </div>
+  `;
+}
+
+
+/* KATEGORIJA */
 
 function categoryPage(cat){
 
-document.getElementById('month').textContent=monthName();
+  document.getElementById('month').textContent=
+    monthName();
 
-let a=monthEntries()
-.filter(e=>e.type==='expense'&&e.category===cat)
-.slice()
-.reverse();
+  let a=
+    monthEntries()
+    .filter(e=>
+      e.type==='expense' &&
+      e.category===cat
+    )
+    .slice()
+    .reverse();
 
-let c=categories.find(x=>x[1]===cat);
+  let c=categories.find(x=>x[1]===cat);
 
-let total=a.reduce(
-(s,e)=>s+Number(e.amount||0),0
-);
+  let total=a.reduce(
+    (s,e)=>s+Number(e.amount||0),
+    0
+  );
 
-document.getElementById('main').innerHTML=`
 
-<button class="back" onclick="home()">
-← Nazad
-</button>
+  document.getElementById('main').innerHTML=`
 
-<div class="categoryHead">
+    <button
+      class="back"
+      onclick="home()">
+      ← Nazad
+    </button>
 
-<div class="big">
-${c?c[0]:'📦'} ${esc(cat)}
-</div>
 
-<div class="categoryTotal">
-${money(total)}
-</div>
+    <div class="categoryHead">
 
-<small style="color:var(--muted)">
-Ukupno ovog meseca
-</small>
+      <div class="big">
+        ${c?c[0]:'📦'} ${esc(cat)}
+      </div>
 
-</div>
+      <div class="categoryTotal">
+        ${money(total)}
+      </div>
 
-<div class="list">
+      <small style="color:var(--muted)">
+        Ukupno ovog meseca
+      </small>
 
-${
-a.length
-?a.map(row).join('')
-:'<div class="empty">Nema troškova u ovoj kategoriji ovog meseca.</div>'
+    </div>
+
+
+    <div class="list">
+
+      ${
+        a.length
+        ?a.map(e=>`
+
+          <div class="row">
+
+            <div class="rowLeft">
+
+              <div class="rowTitle">
+                ${esc(
+                  e.note ||
+                  e.category ||
+                  'Bez opisa'
+                )}
+              </div>
+
+              <span class="rowMeta">
+                ${dateText(e.date)}
+              </span>
+
+            </div>
+
+
+            <div class="rowRight">
+
+              <div class="minus">
+                − ${money(e.amount)}
+              </div>
+
+              <button
+                class="delete"
+                onclick="deleteEntry(${e.id})">
+                Obriši
+              </button>
+
+            </div>
+
+          </div>
+
+        `).join('')
+
+        :'<div class="empty">Nema troškova u ovoj kategoriji ovog meseca.</div>'
+      }
+
+    </div>
+  `;
 }
 
-</div>
-`;
-}
 
-function row(e){
-
-return `
-
-<div class="row">
-
-<div class="rowLeft">
-
-<div class="rowTitle">
-${esc(e.note||e.category||'Bez opisa')}
-</div>
-
-<span class="rowMeta">
-${esc(e.category||'')} · ${dateText(e.date)}
-</span>
-
-</div>
-
-<div class="rowRight">
-
-<div class="${e.type==='income'?'plus':'minus'}">
-
-${e.type==='income'?'+':'−'} ${money(e.amount)}
-
-</div>
-
-<button class="delete"
-onclick="deleteEntry(${e.id})">
-Obriši
-</button>
-
-</div>
-
-</div>
-
-`;
-}
+/* BRISANJE UNOSA */
 
 function deleteEntry(id){
 
-if(!confirm('Obrisati ovaj unos?'))return;
+  if(!confirm('Obrisati ovaj unos?'))
+    return;
 
-state.entries=
-state.entries.filter(e=>e.id!==id);
+  state.entries=
+    state.entries.filter(
+      e=>e.id!==id
+    );
 
-saveState();
+  saveState();
 
-home();
+  home();
 }
+
+
+/* BRISANJE ŠTEDNJE */
+
+function deleteSaving(id){
+
+  if(!confirm('Obrisati ovaj unos štednje?'))
+    return;
+
+  let item=
+    state.savingHistory.find(
+      e=>e.id===id
+    );
+
+  if(!item)
+    return;
+
+  if(item.type==='add')
+    state.savings=
+      Math.max(
+        0,
+        state.savings-
+        Number(item.amount)
+      );
+
+  else
+    state.savings+=
+      Number(item.amount);
+
+  state.savingHistory=
+    state.savingHistory.filter(
+      e=>e.id!==id
+    );
+
+  saveState();
+
+  historyPage('saving');
+}
+
+
+/* UNOS UPLATE/TROŠKA */
 
 function openEntryModal(type){
 
-entryMode=type;
+  entryMode=type;
 
-document.getElementById('entryTitle').textContent=
-type==='income'
-?'Novo primanje'
-:'Novi trošak';
+  document.getElementById('entryTitle').textContent=
+    type==='income'
+    ?'Nova uplata'
+    :'Novi trošak';
 
-let options=
-type==='income'
-?
-[
-['💰','Plata'],
-['💼','Dodatni prihod'],
-['📦','Ostalo']
-]
-:
-categories;
+  let options;
 
-document.getElementById('category').innerHTML=
-options.map(x=>
-`<option value="${x[1]}">${x[0]} ${x[1]}</option>`
-).join('');
+  if(type==='income'){
 
-document.getElementById('amount').value='';
-document.getElementById('note').value='';
+    options=[
+      'Plata',
+      'Dodatni prihod',
+      'Ostalo'
+    ];
 
-document.getElementById('entrySheet')
-.classList.add('show');
+  }else{
+
+    options=
+      categories.map(
+        c=>c[1]
+      );
+
+  }
+
+  document.getElementById('category').innerHTML=
+    options.map(
+      x=>`<option>${x}</option>`
+    ).join('');
+
+  document.getElementById('amount').value='';
+  document.getElementById('note').value='';
+
+  document
+    .getElementById('entrySheet')
+    .classList.add('show');
 }
+
 
 function saveEntry(){
 
-let a=Number(
-document.getElementById('amount').value
-);
+  let a=
+    Number(
+      document.getElementById('amount').value
+    );
 
-if(!a||a<1){
-alert('Unesi iznos.');
-return;
+  if(!a || a<1){
+
+    alert('Unesi iznos.');
+
+    return;
+  }
+
+
+  let now=new Date();
+
+  let day=
+    String(now.getDate())
+    .padStart(2,'0');
+
+
+  state.entries.push({
+
+    id:Date.now(),
+
+    type:entryMode,
+
+    amount:a,
+
+    category:
+      document.getElementById('category').value,
+
+    note:
+      document.getElementById('note').value.trim(),
+
+    date:
+      monthKey()+
+      '-'+
+      day
+
+  });
+
+
+  saveState();
+
+  closeSheet('entrySheet');
+
+  home();
 }
 
-let day=
-String(new Date().getDate()).padStart(2,'0');
 
-state.entries.push({
-
-id:Date.now(),
-
-type:entryMode,
-
-amount:a,
-
-category:
-document.getElementById('category').value,
-
-note:
-document.getElementById('note').value.trim(),
-
-date:monthKey()+'-'+day
-
-});
-
-saveState();
-
-closeSheet('entrySheet');
-
-home();
-}
+/* ŠTEDNJA */
 
 function openSavingModal(mode){
 
-savingMode=mode;
+  savingMode=mode;
 
-document.getElementById('savingTitle').textContent=
-mode==='add'
-?'Dodaj u štednju'
-:'Povuci iz štednje';
+  document.getElementById('savingTitle').textContent=
+    mode==='add'
+    ?'Prebaci u štednju'
+    :'Povuci iz štednje';
 
-document.getElementById('savingAmountInput').value='';
-document.getElementById('savingNote').value='';
+  document.getElementById('savingAmountInput').value='';
+  document.getElementById('savingNote').value='';
 
-document.getElementById('savingSheet')
-.classList.add('show');
+  document
+    .getElementById('savingSheet')
+    .classList.add('show');
 }
+
 
 function saveSaving(){
 
-let a=Number(
-document.getElementById('savingAmountInput').value
-);
+  let a=
+    Number(
+      document.getElementById(
+        'savingAmountInput'
+      ).value
+    );
 
-if(!a||a<1){
-alert('Unesi iznos.');
-return;
+  if(!a || a<1){
+
+    alert('Unesi iznos.');
+
+    return;
+  }
+
+
+  /*
+    PREBACIVANJE U ŠTEDNJU:
+    novac se skida iz raspoloživog
+    stanja i dodaje na štedni račun.
+  */
+
+  if(savingMode==='add'){
+
+    state.savings+=a;
+
+  }else{
+
+    if(a>state.savings){
+
+      alert(
+        'Nema dovoljno novca na štednom računu.'
+      );
+
+      return;
+    }
+
+    state.savings-=a;
+  }
+
+
+  let now=new Date();
+
+  let day=
+    String(now.getDate())
+    .padStart(2,'0');
+
+
+  state.savingHistory.push({
+
+    id:Date.now(),
+
+    type:savingMode,
+
+    amount:a,
+
+    note:
+      document
+      .getElementById('savingNote')
+      .value
+      .trim(),
+
+    date:
+      monthKey()+
+      '-'+
+      day
+
+  });
+
+
+  saveState();
+
+  closeSheet('savingSheet');
+
+  home();
 }
 
-if(
-savingMode==='withdraw'
-&&
-a>state.savings
-){
-alert(
-'Nema dovoljno novca na štednom računu.'
-);
-return;
-}
-
-state.savings+=
-savingMode==='add'
-?a
-:-a;
-
-saveState();
-
-closeSheet('savingSheet');
-
-home();
-}
 
 function closeSheet(id){
-document.getElementById(id)
-.classList.remove('show');
+
+  document
+    .getElementById(id)
+    .classList
+    .remove('show');
 }
+
 
 function moveMonth(n){
 
-current.setMonth(
-current.getMonth()+n
-);
+  current.setMonth(
+    current.getMonth()+n
+  );
 
-home();
+  home();
 }
+
+
+/* START */
 
 applyTheme();
 home();
+
 </script>
 
 </body>
