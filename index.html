@@ -448,6 +448,7 @@ input,select{
 </div>
 
 <nav class="bottom-nav">
+
   <button class="nav-btn" onclick="home()">
     <span class="nav-icon">🏠</span>
     Početna
@@ -457,6 +458,7 @@ input,select{
     <span class="nav-icon">➕</span>
     Unos
   </button>
+
 </nav>
 
 <script>
@@ -484,12 +486,23 @@ let state = JSON.parse(localStorage.getItem("mojNovcanik")) || {
   savingHistory: []
 };
 
+let currentType = "expense";
+
 /*
-  Ako je prethodna verzija već imala 18.000 RSD,
-  ova vrednost ostaje sačuvana.
+  OVO PAMTI IZ KOJE KATEGORIJE JE KORISNIK UŠAO.
+
+  Primer:
+  Kuća → Unos → automatski Kuća
+  Sport → Unos → automatski Sport
+  Auto → Unos → automatski Auto
 */
 
-let currentType = "expense";
+let selectedCategory = "";
+
+
+/* =========================
+   ČUVANJE
+========================= */
 
 function saveState(){
   localStorage.setItem("mojNovcanik", JSON.stringify(state));
@@ -503,45 +516,80 @@ function today(){
   return new Date().toLocaleDateString("sr-RS");
 }
 
+
+/* =========================
+   UKUPNI IZNOSI
+========================= */
+
 function totals(){
+
   let income = 0;
   let expense = 0;
 
   state.entries.forEach(e=>{
-    if(e.type === "income") income += Number(e.amount);
-    if(e.type === "expense") expense += Number(e.amount);
+
+    if(e.type === "income"){
+      income += Number(e.amount);
+    }
+
+    if(e.type === "expense"){
+      expense += Number(e.amount);
+    }
+
   });
 
-  return {income, expense};
+  return {
+    income,
+    expense
+  };
 }
+
 
 /*
   REDOVAN RAČUN
 
   Uplate povećavaju stanje.
+
   Obični troškovi smanjuju stanje.
-  Prebacivanje novca U ŠTEDNJU smanjuje stanje.
-  Povlačenje SA ŠTEDNJE NE povećava stanje,
-  jer je taj novac već potrošen.
+
+  Uplata u štednju smanjuje redovan račun.
+
+  Povlačenje sa štednje NE povećava redovan račun.
 */
+
 function regularBalance(){
+
   const t = totals();
 
   let transferredToSavings = 0;
 
   state.savingHistory.forEach(x=>{
+
     if(x.type === "deposit"){
       transferredToSavings += Number(x.amount);
     }
+
   });
 
   return t.income - t.expense - transferredToSavings;
 }
 
+
+/* =========================
+   KATEGORIJE
+========================= */
+
 function categoryTotal(name){
+
   return state.entries
-    .filter(e=>e.type === "expense" && e.category === name)
-    .reduce((sum,e)=>sum + Number(e.amount),0);
+    .filter(e =>
+      e.type === "expense" &&
+      e.category === name
+    )
+    .reduce(
+      (sum,e) => sum + Number(e.amount),
+      0
+    );
 }
 
 
@@ -551,222 +599,473 @@ function categoryTotal(name){
 
 function home(){
 
+  /*
+    Kada se vratimo na početnu,
+    više nismo vezani za prethodnu kategoriju.
+  */
+
+  selectedCategory = "";
+
   const t = totals();
 
-  document.getElementById("headerTitle").textContent = "Moj Novcanik";
+  document.getElementById("headerTitle").textContent =
+    "Moj Novcanik";
 
   let html = `
     <div class="page">
 
       <div class="balance-card">
-        <div class="balance-title">Stanje na redovnom računu</div>
-        <div class="balance">${money(regularBalance())}</div>
+
+        <div class="balance-title">
+          Stanje na redovnom računu
+        </div>
+
+        <div class="balance">
+          ${money(regularBalance())}
+        </div>
+
       </div>
+
 
       <div class="stats">
 
         <div class="stat" onclick="historyPage('income')">
-          <div class="stat-title">Uplate</div>
-          <div class="stat-value income">${money(t.income)}</div>
+
+          <div class="stat-title">
+            Uplate
+          </div>
+
+          <div class="stat-value income">
+            ${money(t.income)}
+          </div>
+
         </div>
 
+
         <div class="stat" onclick="historyPage('expense')">
-          <div class="stat-title">Troškovi</div>
-          <div class="stat-value expense">${money(t.expense)}</div>
+
+          <div class="stat-title">
+            Troškovi
+          </div>
+
+          <div class="stat-value expense">
+            ${money(t.expense)}
+          </div>
+
         </div>
 
       </div>
 
-      <div class="section-title">Moja štednja</div>
+
+      <div class="section-title">
+        Moja štednja
+      </div>
+
 
       <div class="savings-card" onclick="savingsPage()">
 
         <div class="savings-top">
+
           <div>
-            <div class="savings-name">🏦 Štedni račun</div>
-            <div class="savings-value">${money(state.savings)}</div>
+
+            <div class="savings-name">
+              🏦 Štedni račun
+            </div>
+
+            <div class="savings-value">
+              ${money(state.savings)}
+            </div>
+
           </div>
 
-          <div class="savings-icon">→</div>
+          <div class="savings-icon">
+            →
+          </div>
+
         </div>
 
       </div>
 
-      <div class="section-title">Troškovi po kategorijama</div>
+
+      <div class="section-title">
+        Troškovi po kategorijama
+      </div>
+
 
       <div class="categories">
   `;
 
+
   categories.forEach(c=>{
+
     html += `
-      <div class="category" onclick="categoryPage('${c[1]}')">
-        <div class="category-icon">${c[0]}</div>
-        <div class="category-name">${c[1]}</div>
-        <div class="category-total">${money(categoryTotal(c[1]))}</div>
+
+      <div
+        class="category"
+        onclick="categoryPage('${c[1]}')"
+      >
+
+        <div class="category-icon">
+          ${c[0]}
+        </div>
+
+        <div class="category-name">
+          ${c[1]}
+        </div>
+
+        <div class="category-total">
+          ${money(categoryTotal(c[1]))}
+        </div>
+
       </div>
+
     `;
+
   });
 
+
   html += `
+
       </div>
+
     </div>
   `;
+
 
   document.getElementById("app").innerHTML = html;
 }
 
 
 /* =========================
-   UNOS
+   NOVI UNOS
 ========================= */
 
 function addPage(){
 
   currentType = "expense";
 
-  document.getElementById("headerTitle").textContent = "Novi unos";
+  document.getElementById("headerTitle").textContent =
+    "Novi unos";
+
 
   let html = `
+
     <div class="page">
 
-      <button class="back" onclick="home()">← Nazad</button>
+      <button
+        class="back"
+        onclick="goBackFromAdd()"
+      >
+        ← Nazad
+      </button>
 
-      <div class="page-title">Novi unos</div>
+
+      <div class="page-title">
+        Novi unos
+      </div>
+
 
       <div class="form-card">
+
 
         <div class="type-buttons">
 
           <button
             id="incomeBtn"
             class="type-btn"
-            onclick="setType('income')">
+            onclick="setType('income')"
+          >
             💰 Uplata
           </button>
+
 
           <button
             id="expenseBtn"
             class="type-btn active-expense"
-            onclick="setType('expense')">
+            onclick="setType('expense')"
+          >
             📉 Trošak
           </button>
 
         </div>
 
-        <label>Iznos</label>
-        <input id="amount" type="number" inputmode="decimal" placeholder="0">
 
-        <label>Opis</label>
-        <input id="description" type="text" placeholder="Npr. plata, račun, gorivo...">
+        <label>
+          Iznos
+        </label>
+
+        <input
+          id="amount"
+          type="number"
+          inputmode="decimal"
+          placeholder="0"
+        >
+
+
+        <label>
+          Opis
+        </label>
+
+        <input
+          id="description"
+          type="text"
+          placeholder="Npr. plata, račun, gorivo..."
+        >
+
 
         <div id="categoryBox">
-          <label>Kategorija</label>
+
+          <label>
+            Kategorija
+          </label>
+
 
           <select id="category">
-            ${categories.map(c=>`<option value="${c[1]}">${c[0]} ${c[1]}</option>`).join("")}
+
+            ${categories.map(c=>`
+
+              <option
+                value="${c[1]}"
+                ${selectedCategory === c[1] ? "selected" : ""}
+              >
+                ${c[0]} ${c[1]}
+              </option>
+
+            `).join("")}
+
           </select>
+
         </div>
 
-        <button class="primary" onclick="addEntry()">
+
+        <button
+          class="primary"
+          onclick="addEntry()"
+        >
           Sačuvaj
         </button>
+
 
       </div>
 
     </div>
+
   `;
+
 
   document.getElementById("app").innerHTML = html;
 }
+
+
+/*
+  Ako smo ušli u Unos direktno sa početne,
+  vraćamo se na početnu.
+
+  Ako smo došli iz određene kategorije,
+  vraćamo se baš u tu kategoriju.
+*/
+
+function goBackFromAdd(){
+
+  if(selectedCategory){
+    categoryPage(selectedCategory);
+  }else{
+    home();
+  }
+
+}
+
+
+/* =========================
+   TIP UNOSA
+========================= */
 
 function setType(type){
 
   currentType = type;
 
+
   document.getElementById("incomeBtn").className =
-    "type-btn" + (type === "income" ? " active-income" : "");
+    "type-btn" +
+    (type === "income" ? " active-income" : "");
+
 
   document.getElementById("expenseBtn").className =
-    "type-btn" + (type === "expense" ? " active-expense" : "");
+    "type-btn" +
+    (type === "expense" ? " active-expense" : "");
+
 
   document.getElementById("categoryBox").style.display =
-    type === "expense" ? "block" : "none";
+    type === "expense"
+      ? "block"
+      : "none";
 }
+
+
+/* =========================
+   ČUVANJE UNOSA
+========================= */
 
 function addEntry(){
 
-  const amount = Number(document.getElementById("amount").value);
-  const description = document.getElementById("description").value.trim();
+  const amount =
+    Number(document.getElementById("amount").value);
+
+
+  const description =
+    document
+      .getElementById("description")
+      .value
+      .trim();
+
 
   if(!amount || amount <= 0){
+
     alert("Unesi iznos.");
+
     return;
   }
 
+
   if(!description){
+
     alert("Unesi opis.");
+
     return;
   }
+
 
   let category = "";
 
+
   if(currentType === "expense"){
-    category = document.getElementById("category").value;
+
+    category =
+      document.getElementById("category").value;
+
   }
 
+
   state.entries.push({
+
     id: Date.now(),
+
     type: currentType,
+
     amount: amount,
+
     description: description,
+
     category: category,
+
     date: today()
+
   });
 
+
   saveState();
+
+
+  /*
+    Posle čuvanja brišemo izabranu kategoriju
+    da sledeći direktni unos ne bi slučajno
+    nasledio prethodnu kategoriju.
+  */
+
+  selectedCategory = "";
+
+
   home();
 }
 
 
 /* =========================
-   KATEGORIJA
+   STRANICA KATEGORIJE
 ========================= */
 
 function categoryPage(name){
 
-  const list = state.entries.filter(
-    e => e.type === "expense" && e.category === name
-  );
+  /*
+    KLJUČNA ISPRAVKA:
 
-  document.getElementById("headerTitle").textContent = name;
+    Čim korisnik uđe u kategoriju,
+    zapamtimo tu kategoriju.
+
+    Ako zatim pritisne "Unos",
+    forma će automatski imati tu kategoriju.
+  */
+
+  selectedCategory = name;
+
+
+  const list =
+    state.entries.filter(
+      e =>
+        e.type === "expense" &&
+        e.category === name
+    );
+
+
+  document.getElementById("headerTitle").textContent =
+    name;
+
 
   let html = `
+
     <div class="page">
 
-      <button class="back" onclick="home()">← Nazad</button>
+      <button
+        class="back"
+        onclick="home()"
+      >
+        ← Nazad
+      </button>
 
-      <div class="page-title">${name}</div>
+
+      <div class="page-title">
+        ${name}
+      </div>
+
 
       <div class="section-title">
         Ukupno: ${money(categoryTotal(name))}
       </div>
+
   `;
+
 
   if(!list.length){
 
-    html += `<div class="empty">Nema unosa u ovoj kategoriji.</div>`;
+    html += `
+
+      <div class="empty">
+        Nema unosa u ovoj kategoriji.
+      </div>
+
+    `;
 
   }else{
 
-    [...list].reverse().forEach(e=>{
-      html += historyItem(e);
-    });
+    [...list]
+      .reverse()
+      .forEach(e=>{
+
+        html += historyItem(e);
+
+      });
 
   }
 
-  html += `</div>`;
 
-  document.getElementById("app").innerHTML = html;
+  html += `
+
+    </div>
+
+  `;
+
+
+  document.getElementById("app").innerHTML =
+    html;
 }
 
 
@@ -776,41 +1075,90 @@ function categoryPage(name){
 
 function historyPage(type){
 
-  const list = state.entries.filter(e=>e.type === type);
+  /*
+    Ako otvorimo istoriju,
+    više nismo u konkretnoj kategoriji.
+  */
+
+  selectedCategory = "";
+
+
+  const list =
+    state.entries.filter(
+      e => e.type === type
+    );
+
 
   document.getElementById("headerTitle").textContent =
-    type === "income" ? "Uplate" : "Troškovi";
+    type === "income"
+      ? "Uplate"
+      : "Troškovi";
+
 
   let html = `
+
     <div class="page">
 
-      <button class="back" onclick="home()">← Nazad</button>
+      <button
+        class="back"
+        onclick="home()"
+      >
+        ← Nazad
+      </button>
+
 
       <div class="page-title">
-        ${type === "income" ? "Istorija uplata" : "Istorija troškova"}
+
+        ${
+          type === "income"
+            ? "Istorija uplata"
+            : "Istorija troškova"
+        }
+
       </div>
+
   `;
+
 
   if(!list.length){
 
-    html += `<div class="empty">Nema unosa.</div>`;
+    html += `
+
+      <div class="empty">
+        Nema unosa.
+      </div>
+
+    `;
 
   }else{
 
-    [...list].reverse().forEach(e=>{
-      html += historyItem(e);
-    });
+    [...list]
+      .reverse()
+      .forEach(e=>{
+
+        html += historyItem(e);
+
+      });
 
   }
 
+
   html += `</div>`;
 
-  document.getElementById("app").innerHTML = html;
+
+  document.getElementById("app").innerHTML =
+    html;
 }
+
+
+/* =========================
+   STAVKA ISTORIJE
+========================= */
 
 function historyItem(e){
 
   return `
+
     <div class="history-item">
 
       <div class="history-left">
@@ -819,45 +1167,94 @@ function historyItem(e){
           ${escapeHtml(e.description)}
         </div>
 
+
         <div class="history-date">
-          ${e.date}${e.category ? " • " + e.category : ""}
+
+          ${e.date}
+
+          ${e.category
+            ? " • " + e.category
+            : ""
+          }
+
         </div>
 
       </div>
 
+
       <div class="history-right">
 
-        <div class="${e.type === "income" ? "income" : "expense"}">
-          ${e.type === "income" ? "+" : "-"}${money(e.amount)}
+        <div class="${
+          e.type === "income"
+            ? "income"
+            : "expense"
+        }">
+
+          ${
+            e.type === "income"
+              ? "+"
+              : "-"
+          }${money(e.amount)}
+
         </div>
 
-        <button class="delete" onclick="deleteEntry(${e.id})">
+
+        <button
+          class="delete"
+          onclick="deleteEntry(${e.id})"
+        >
           Obriši
         </button>
 
       </div>
 
     </div>
+
   `;
 }
 
+
+/* =========================
+   BRISANJE UNOSA
+========================= */
+
 function deleteEntry(id){
 
-  const e = state.entries.find(x=>x.id === id);
+  const e =
+    state.entries.find(
+      x => x.id === id
+    );
 
-  if(!e) return;
 
-  if(!confirm("Obrisati ovaj unos?")) return;
+  if(!e){
+    return;
+  }
 
-  state.entries = state.entries.filter(x=>x.id !== id);
+
+  if(!confirm("Obrisati ovaj unos?")){
+    return;
+  }
+
+
+  state.entries =
+    state.entries.filter(
+      x => x.id !== id
+    );
+
 
   saveState();
 
+
   if(e.type === "income"){
+
     historyPage("income");
+
   }else{
+
     historyPage("expense");
+
   }
+
 }
 
 
@@ -867,14 +1264,29 @@ function deleteEntry(id){
 
 function savingsPage(){
 
-  document.getElementById("headerTitle").textContent = "Štedni račun";
+  selectedCategory = "";
+
+
+  document.getElementById("headerTitle").textContent =
+    "Štedni račun";
+
 
   let html = `
+
     <div class="page">
 
-      <button class="back" onclick="home()">← Nazad</button>
+      <button
+        class="back"
+        onclick="home()"
+      >
+        ← Nazad
+      </button>
 
-      <div class="page-title">🏦 Štedni račun</div>
+
+      <div class="page-title">
+        🏦 Štedni račun
+      </div>
+
 
       <div class="balance-card">
 
@@ -882,76 +1294,111 @@ function savingsPage(){
           Trenutno stanje štednje
         </div>
 
+
         <div class="balance">
           ${money(state.savings)}
         </div>
 
       </div>
 
+
       <div class="saving-buttons">
 
-        <button class="primary" onclick="savingDepositPage()">
+        <button
+          class="primary"
+          onclick="savingDepositPage()"
+        >
           + Uplati
         </button>
 
-        <button class="secondary" onclick="savingWithdrawPage()">
+
+        <button
+          class="secondary"
+          onclick="savingWithdrawPage()"
+        >
           − Povuci
         </button>
 
       </div>
 
+
       <div class="section-title">
-        Istorija štedње
+        Istorija štednje
       </div>
+
   `;
 
-  const list = state.savingHistory || [];
+
+  const list =
+    state.savingHistory || [];
+
 
   if(!list.length){
 
     html += `
+
       <div class="empty">
-        Nema još aktivnosti na štedном računu.
+        Nema još aktivnosti na štednom računu.
       </div>
+
     `;
 
   }else{
 
-    [...list].reverse().forEach(x=>{
+    [...list]
+      .reverse()
+      .forEach(x=>{
 
-      html += `
-        <div class="history-item">
+        html += `
 
-          <div class="history-left">
+          <div class="history-item">
 
-            <div class="history-desc">
-              ${escapeHtml(x.description)}
+            <div class="history-left">
+
+              <div class="history-desc">
+                ${escapeHtml(x.description)}
+              </div>
+
+
+              <div class="history-date">
+                ${x.date}
+              </div>
+
             </div>
 
-            <div class="history-date">
-              ${x.date}
+
+            <div class="history-right">
+
+              <div class="${
+                x.type === "deposit"
+                  ? "income"
+                  : "expense"
+              }">
+
+                ${
+                  x.type === "deposit"
+                    ? "+"
+                    : "-"
+                }${money(x.amount)}
+
+              </div>
+
             </div>
 
           </div>
 
-          <div class="history-right">
+        `;
 
-            <div class="${x.type === "deposit" ? "income" : "expense"}">
-              ${x.type === "deposit" ? "+" : "-"}${money(x.amount)}
-            </div>
-
-          </div>
-
-        </div>
-      `;
-
-    });
+      });
 
   }
 
+
   html += `</div>`;
 
-  document.getElementById("app").innerHTML = html;
+
+  document.getElementById("app").innerHTML =
+    html;
 }
 
 
@@ -961,70 +1408,147 @@ function savingsPage(){
 
 function savingDepositPage(){
 
-  document.getElementById("headerTitle").textContent = "Uplata na štednju";
+  document.getElementById("headerTitle").textContent =
+    "Uplata na štednju";
+
 
   document.getElementById("app").innerHTML = `
+
     <div class="page">
 
-      <button class="back" onclick="savingsPage()">← Nazad</button>
+      <button
+        class="back"
+        onclick="savingsPage()"
+      >
+        ← Nazad
+      </button>
 
-      <div class="page-title">Uplata na štednju</div>
+
+      <div class="page-title">
+        Uplata na štednju
+      </div>
+
 
       <div class="notice">
-        Ovaj novac se skida sa redovnog računa i prebacuje na štedni račun.
-        Ne računa se kao novi prihod i nije trošak.
+
+        Ovaj novac se skida sa redovnog računa
+        i prebacuje na štedni račun.
+
+        Ne računa se kao novi prihod
+        i nije trošak.
+
       </div>
+
 
       <div class="form-card">
 
-        <label>Iznos</label>
-        <input id="savingAmount" type="number" inputmode="decimal" placeholder="0">
+        <label>
+          Iznos
+        </label>
 
-        <label>Opis</label>
-        <input id="savingDescription" type="text" placeholder="Npr. mesečna štednja">
 
-        <button class="primary" onclick="saveSavingDeposit()">
+        <input
+          id="savingAmount"
+          type="number"
+          inputmode="decimal"
+          placeholder="0"
+        >
+
+
+        <label>
+          Opis
+        </label>
+
+
+        <input
+          id="savingDescription"
+          type="text"
+          placeholder="Npr. mesečna štednja"
+        >
+
+
+        <button
+          class="primary"
+          onclick="saveSavingDeposit()"
+        >
           Prebaci u štednju
         </button>
 
       </div>
 
     </div>
+
   `;
 }
 
+
 function saveSavingDeposit(){
 
-  const amount = Number(document.getElementById("savingAmount").value);
+  const amount =
+    Number(
+      document.getElementById("savingAmount").value
+    );
+
+
   const description =
-    document.getElementById("savingDescription").value.trim();
+    document
+      .getElementById("savingDescription")
+      .value
+      .trim();
+
 
   if(!amount || amount <= 0){
+
     alert("Unesi iznos.");
+
     return;
   }
+
 
   if(amount > regularBalance()){
-    alert("Nema dovoljno novca na redovnom računu.");
+
+    alert(
+      "Nema dovoljno novca na redovnom računu."
+    );
+
     return;
   }
 
+
   if(!description){
+
     alert("Unesi opis.");
+
     return;
   }
+
+
+  /*
+    Novac se skida sa redovnog računa
+    kroz obračun regularBalance()
+    i prebacuje u štednju.
+  */
 
   state.savings += amount;
 
+
   state.savingHistory.push({
+
     id: Date.now(),
+
     type: "deposit",
+
     amount: amount,
+
     description: description,
+
     date: today()
+
   });
 
+
   saveState();
+
 
   savingsPage();
 }
@@ -1036,114 +1560,209 @@ function saveSavingDeposit(){
 
 function savingWithdrawPage(){
 
-  document.getElementById("headerTitle").textContent = "Povlačenje sa štednje";
+  document.getElementById("headerTitle").textContent =
+    "Povlačenje sa štednje";
+
 
   document.getElementById("app").innerHTML = `
+
     <div class="page">
 
-      <button class="back" onclick="savingsPage()">← Nazad</button>
+      <button
+        class="back"
+        onclick="savingsPage()"
+      >
+        ← Nazad
+      </button>
 
-      <div class="page-title">Povlačenje sa štedње</div>
+
+      <div class="page-title">
+        Povlačenje sa štednje
+      </div>
+
 
       <div class="notice">
-        Novac koji povučeš sa štednje smatra se potrošenim.
-        Zbog toga povećava Troškove, ali se NE vraća na redovni račun.
+
+        Novac koji povučeš sa štednje
+        smatra se potrošenim.
+
+        Zbog toga povećava Troškove,
+        ali se NE vraća na redovni račun.
+
       </div>
+
 
       <div class="form-card">
 
-        <label>Iznos</label>
-        <input id="savingAmount" type="number" inputmode="decimal" placeholder="0">
+        <label>
+          Iznos
+        </label>
 
-        <label>Opis</label>
-        <input id="savingDescription" type="text" placeholder="Npr. popravka auta">
 
-        <label>Kategorija troška</label>
+        <input
+          id="savingAmount"
+          type="number"
+          inputmode="decimal"
+          placeholder="0"
+        >
+
+
+        <label>
+          Opis
+        </label>
+
+
+        <input
+          id="savingDescription"
+          type="text"
+          placeholder="Npr. popravka auta"
+        >
+
+
+        <label>
+          Kategorija troška
+        </label>
+
 
         <select id="savingCategory">
+
           ${categories.map(c=>`
-            <option value="${c[1]}">${c[0]} ${c[1]}</option>
+
+            <option value="${c[1]}">
+              ${c[0]} ${c[1]}
+            </option>
+
           `).join("")}
+
         </select>
 
-        <button class="primary" onclick="saveSavingWithdraw()">
+
+        <button
+          class="primary"
+          onclick="saveSavingWithdraw()"
+        >
           Potroši sa štednje
         </button>
 
       </div>
 
     </div>
+
   `;
 }
 
+
 function saveSavingWithdraw(){
 
-  const amount = Number(document.getElementById("savingAmount").value);
+  const amount =
+    Number(
+      document.getElementById("savingAmount").value
+    );
+
 
   const description =
-    document.getElementById("savingDescription").value.trim();
+    document
+      .getElementById("savingDescription")
+      .value
+      .trim();
+
 
   const category =
     document.getElementById("savingCategory").value;
 
+
   if(!amount || amount <= 0){
+
     alert("Unesi iznos.");
+
     return;
   }
+
 
   if(amount > state.savings){
-    alert("Nema dovoljno novca na štedном računu.");
+
+    alert(
+      "Nema dovoljno novca na štednom računu."
+    );
+
     return;
   }
 
+
   if(!description){
+
     alert("Unesi opis.");
+
     return;
   }
+
 
   /*
     KLJUČNA LOGIKA:
 
     Štednja se smanjuje.
 
-    Redovan račun se NE povećava.
+    Redovan račun OSTAJE ISTI.
 
-    Umesto toga, pravi se običan TROŠAK,
-    pa se Troškovi povećavaju.
+    Pravi se trošak.
 
-    Tako npr:
-    redovan račun = 80.000
-    štednja = 20.000
+    Zato se Troškovi povećavaju,
+    ali se redovan račun ne povećava.
 
-    povučemo 20.000 za auto:
+    Primer:
 
-    redovan račun = 80.000
-    štednja = 0
-    troškovi +20.000
+    Redovan račun = 80.000
+    Štednja = 20.000
+
+    Potrošimo 20.000 iz štednje:
+
+    Redovan račun = 80.000
+    Štednja = 0
+    Troškovi +20.000
   */
+
 
   state.savings -= amount;
 
+
   state.entries.push({
+
     id: Date.now(),
+
     type: "expense",
+
     amount: amount,
+
     description: description,
+
     category: category,
+
     date: today(),
+
     fromSavings: true
+
   });
+
 
   state.savingHistory.push({
+
     id: Date.now() + 1,
+
     type: "withdraw",
+
     amount: amount,
+
     description: description,
+
     date: today(),
+
     category: category
+
   });
 
+
   saveState();
+
 
   savingsPage();
 }
@@ -1157,27 +1776,37 @@ function toggleTheme(){
 
   document.body.classList.toggle("dark");
 
+
   const dark =
     document.body.classList.contains("dark");
+
 
   localStorage.setItem(
     "mojNovcanikTheme",
     dark ? "dark" : "light"
   );
 
+
   document.getElementById("themeBtn").textContent =
     dark ? "☀️" : "🌙";
 }
+
 
 function loadTheme(){
 
   const theme =
     localStorage.getItem("mojNovcanikTheme");
 
+
   if(theme === "dark"){
+
     document.body.classList.add("dark");
-    document.getElementById("themeBtn").textContent = "☀️";
+
+    document.getElementById("themeBtn").textContent =
+      "☀️";
+
   }
+
 }
 
 
@@ -1188,10 +1817,15 @@ function loadTheme(){
 function escapeHtml(text){
 
   return String(text)
+
     .replace(/&/g,"&amp;")
+
     .replace(/</g,"&lt;")
+
     .replace(/>/g,"&gt;")
+
     .replace(/"/g,"&quot;")
+
     .replace(/'/g,"&#039;");
 }
 
@@ -1201,6 +1835,7 @@ function escapeHtml(text){
 ========================= */
 
 loadTheme();
+
 home();
 
 </script>
