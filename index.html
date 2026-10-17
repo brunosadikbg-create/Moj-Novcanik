@@ -1,5 +1,4 @@
 HTML
-
 <!DOCTYPE html>
 <html lang="sr">
 <head>
@@ -85,30 +84,20 @@ input,select{width:100%;padding:14px;border-radius:12px;border:1px solid #d6dce0
 <button class="nav-btn" onclick="home()"><span class="nav-icon">🏠</span>Početna</button>
 <button class="nav-btn" onclick="addPage()"><span class="nav-icon">➕</span>Unos</button>
 </nav>
-
 <script>
-const categories=[
-["🍔","Hrana"],["🏠","Kuća"],["🚗","Auto"],["❤️","Zdravlje"],
-["👕","Garderoba"],["⚽","Sport"],["🎁","Pokloni"],
-["🧾","Sitni računi"],["🍻","Izlasci"],["✈️","Putovanje"]
-];
-
+const categories=[["🍔","Hrana"],["🏠","Kuća"],["🚗","Auto"],["❤️","Zdravlje"],["👕","Garderoba"],["⚽","Sport"],["🎁","Pokloni"],["🧾","Sitni računi"],["🍻","Izlasci"],["✈️","Putovanje"]];
 const STORAGE_KEY="mojNovcanikKalendarV1";
 let state;
 try{state=JSON.parse(localStorage.getItem(STORAGE_KEY))}catch(e){}
-if(!state||typeof state!=="object"){
-state={
- entries:[],
- savings:9000,
- savingHistory:[{id:1,type:"initial",amount:9000,description:"Početno stanje štednje",date:"2026-10-08"}],
- initialSavings:9000
-};
-}
+if(!state||typeof state!=="object")state={entries:[],savings:9000,savingHistory:[{id:1,type:"initial",amount:9000,description:"Početno stanje štednje",date:"2026-10-08"}],initialSavings:9000};
 if(!Array.isArray(state.entries))state.entries=[];
 if(!Array.isArray(state.savingHistory))state.savingHistory=[];
 if(!Number.isFinite(Number(state.savings)))state.savings=9000;
-if(state.regularBalanceCorrection===undefined)state.regularBalanceCorrection=state.entries.length?5400:0;
-
+if(!state.savingsBaselineFixed){
+state.savings=9000;
+state.savingsBaselineFixed=true;
+localStorage.setItem(STORAGE_KEY,JSON.stringify(state))
+}
 let currentType="expense",selectedCategory="",selectedMonth="2026-10";
 
 function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
@@ -120,184 +109,271 @@ function monthName(m){return ["Januar","Februar","Mart","April","Maj","Jun","Jul
 function monthTitle(){let p=selectedMonth.split("-");return monthName(+p[1])+" "+p[0]}
 function changeMonth(n){let p=selectedMonth.split("-"),d=new Date(+p[0],+p[1]-1+n,1);selectedMonth=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");home()}
 function isMonth(d){return !!d&&String(d).slice(0,7)===selectedMonth}
-function monthlyTotals(){
- let income=0,expense=0;
- state.entries.forEach(e=>{if(!isMonth(e.date))return;if(e.type==="income")income+=+e.amount||0;if(e.type==="expense")expense+=+e.amount||0});
- return{income,expense}
-}
-function allTotals(){
- let income=0,regularExpense=0;
- state.entries.forEach(e=>{if(e.type==="income")income+=+e.amount||0;if(e.type==="expense"&&!e.fromSavings)regularExpense+=+e.amount||0});
- return{income,regularExpense}
-}
+function monthlyTotals(){let income=0,expense=0;state.entries.forEach(e=>{if(!isMonth(e.date))return;if(e.type==="income")income+=+e.amount||0;if(e.type==="expense")expense+=+e.amount||0});return{income,expense}}
+function allTotals(){let income=0,regularExpense=0;state.entries.forEach(e=>{if(e.type==="income")income+=+e.amount||0;if(e.type==="expense"&&!e.fromSavings)regularExpense+=+e.amount||0});return{income,regularExpense}}
 function savingDeposits(){return state.savingHistory.filter(x=>x.type==="deposit").reduce((s,x)=>s+(+x.amount||0),0)}
 function savingWithdrawals(){return state.savingHistory.filter(x=>x.type==="withdraw").reduce((s,x)=>s+(+x.amount||0),0)}
-function regularBalance(){let t=allTotals();return t.income-t.regularExpense-savingDeposits()+savingWithdrawals()+Number(state.regularBalanceCorrection||0)}
+function rawRegularBalance(){let t=allTotals();return t.income-t.regularExpense-savingDeposits()+savingWithdrawals()}
+
+/* Jednokratno postavi početno stanje redovnog računa na 0, a sačuvaj sve stare unose i štednju. */
+if(state.regularBalanceBaselineVersion!==2){
+state.regularBalanceCorrection=-rawRegularBalance();
+state.regularBalanceBaselineVersion=2;
+saveState()
+}
+function regularBalance(){return rawRegularBalance()+Number(state.regularBalanceCorrection||0)}
 function categoryTotal(n){return state.entries.filter(e=>e.type==="expense"&&e.category===n&&isMonth(e.date)).reduce((s,e)=>s+(+e.amount||0),0)}
 
 function home(){
- selectedCategory="";
- let t=monthlyTotals();
- document.getElementById("headerTitle").textContent="Moj Novcanik";
- let h=`<div class="page">
- <div class="month-box">
- <button class="month-arrow" onclick="changeMonth(-1)">‹</button>
- <div class="month-name">${monthTitle()}</div>
- <button class="month-arrow" onclick="changeMonth(1)">›</button>
- </div>
- <div class="balance-card"><div class="balance-title">Stanje na redovnom računu</div><div class="balance">${money(regularBalance())}</div></div>
- <div class="stats">
- <div class="stat" onclick="historyPage('income')"><div class="stat-title">Uplate — ${monthTitle()}</div><div class="stat-value income">${money(t.income)}</div></div>
- <div class="stat" onclick="historyPage('expense')"><div class="stat-title">Troškovi — ${monthTitle()}</div><div class="stat-value expense">${money(t.expense)}</div></div>
- </div>
- <div class="section-title">Moja štednja</div>
- <div class="savings-card" onclick="savingsPage()"><div class="savings-top"><div><div class="savings-name">🏦 Štedni račun</div><div class="savings-value">${money(state.savings)}</div></div><div style="font-size:28px">→</div></div></div>
- <div class="section-title">Troškovi po kategorijama — ${monthTitle()}</div><div class="categories">`;
- categories.forEach(c=>h+=`<div class="category" onclick="categoryPage('${c[1]}')"><div class="category-icon">${c[0]}</div><div class="category-name">${c[1]}</div><div class="category-total">${money(categoryTotal(c[1]))}</div></div>`);
- document.getElementById("app").innerHTML=h+"</div></div>";
+selectedCategory="";
+let t=monthlyTotals();
+document.getElementById("headerTitle").textContent="Moj Novcanik";
+let h=`<div class="page">
+<div class="month-box">
+<button class="month-arrow" onclick="changeMonth(-1)">‹</button>
+<div class="month-name">${monthTitle()}</div>
+<button class="month-arrow" onclick="changeMonth(1)">›</button>
+</div>
+<div class="balance-card">
+<div class="balance-title">Stanje na redovnom računu</div>
+<div class="balance">${money(regularBalance())}</div>
+</div>
+<div class="stats">
+<div class="stat" onclick="historyPage('income')"><div class="stat-title">Uplate — ${monthTitle()}</div><div class="stat-value income">${money(t.income)}</div></div>
+<div class="stat" onclick="historyPage('expense')"><div class="stat-title">Troškovi — ${monthTitle()}</div><div class="stat-value expense">${money(t.expense)}</div></div>
+</div>
+<div class="section-title">Moja štednja</div>
+<div class="savings-card" onclick="savingsPage()">
+<div class="savings-top"><div><div class="savings-name">🏦 Štedni račun</div><div class="savings-value">${money(state.savings)}</div></div><div style="font-size:28px">→</div></div>
+</div>
+<div class="section-title">Troškovi po kategorijama — ${monthTitle()}</div>
+<div class="categories">`;
+categories.forEach(c=>h+=`<div class="category" onclick="categoryPage('${c[1]}')"><div class="category-icon">${c[0]}</div><div class="category-name">${c[1]}</div><div class="category-total">${money(categoryTotal(c[1]))}</div></div>`);
+document.getElementById("app").innerHTML=h+"</div></div>"
 }
 
 function addPage(){
- currentType="expense";
- document.getElementById("headerTitle").textContent="Novi unos";
- document.getElementById("app").innerHTML=`<div class="page">
- <button class="back" onclick="goBackFromAdd()">← Nazad</button>
- <div class="page-title">Novi unos</div>
- <div class="form-card">
- <div class="type-buttons">
- <button id="incomeBtn" class="type-btn" onclick="setType('income')">💰 Uplata</button>
- <button id="expenseBtn" class="type-btn active-expense" onclick="setType('expense')">📉 Trošak</button>
- </div>
- <label>Datum</label><input id="entryDate" type="date" value="${todayISO()}">
- <label>Iznos (RSD)</label><input id="amount" type="number" min="1" step="1" placeholder="0">
- <label>Opis</label><input id="description" placeholder="Npr. plata, račun, gorivo...">
- <div id="categoryBox"><label>Kategorija</label><select id="category">${categories.map(c=>`<option value="${c[1]}" ${selectedCategory===c[1]?"selected":""}>${c[0]} ${c[1]}</option>`).join("")}</select></div>
- <button class="primary" onclick="addEntry()">Sačuvaj</button>
- </div></div>`;
+currentType="expense";
+document.getElementById("headerTitle").textContent="Novi unos";
+document.getElementById("app").innerHTML=`<div class="page">
+<button class="back" onclick="goBackFromAdd()">← Nazad</button>
+<div class="page-title">Novi unos</div>
+<div class="form-card">
+<div class="type-buttons">
+<button id="incomeBtn" class="type-btn" onclick="setType('income')">💰 Uplata</button>
+<button id="expenseBtn" class="type-btn active-expense" onclick="setType('expense')">📉 Trošak</button>
+</div>
+<label>Datum</label><input id="entryDate" type="date" value="${todayISO()}">
+<label>Iznos (RSD)</label><input id="amount" type="number" min="1" step="1" placeholder="0">
+<label>Opis</label><input id="description" placeholder="Npr. plata, račun, gorivo...">
+<div id="paymentAccountBox">
+<label>Plati sa računa</label>
+<select id="paymentAccount">
+<option value="regular">Redovni račun</option>
+<option value="savings">Štedni račun</option>
+</select>
+</div>
+<div id="categoryBox">
+<label>Kategorija</label>
+<select id="category">${categories.map(c=>`<option value="${c[1]}" ${selectedCategory===c[1]?"selected":""}>${c[0]} ${c[1]}</option>`).join("")}</select>
+</div>
+<button class="primary" onclick="addEntry()">Sačuvaj</button>
+</div></div>`
 }
+
 function goBackFromAdd(){selectedCategory?categoryPage(selectedCategory):home()}
 function setType(t){
- currentType=t;
- document.getElementById("incomeBtn").className="type-btn"+(t==="income"?" active-income":"");
- document.getElementById("expenseBtn").className="type-btn"+(t==="expense"?" active-expense":"");
- document.getElementById("categoryBox").style.display=t==="expense"?"block":"none";
+currentType=t;
+document.getElementById("incomeBtn").className="type-btn"+(t==="income"?" active-income":"");
+document.getElementById("expenseBtn").className="type-btn"+(t==="expense"?" active-expense":"");
+document.getElementById("categoryBox").style.display=t==="expense"?"block":"none";
+document.getElementById("paymentAccountBox").style.display=t==="expense"?"block":"none"
 }
+
 function addEntry(){
- let amount=Number(document.getElementById("amount").value),description=document.getElementById("description").value.trim(),date=document.getElementById("entryDate").value;
- if(!date)return alert("Izaberi datum.");
- if(!Number.isFinite(amount)||amount<=0)return alert("Unesi iznos veći od nule.");
- if(!description)return alert("Unesi opis.");
- let category=currentType==="expense"?document.getElementById("category").value:"";
- state.entries.push({id:Date.now(),type:currentType,amount,description,category,date,fromSavings:false});
- saveState();selectedCategory="";selectedMonth=date.slice(0,7);home();
+let amount=Number(document.getElementById("amount").value);
+let description=document.getElementById("description").value.trim();
+let date=document.getElementById("entryDate").value;
+if(!date)return alert("Izaberi datum.");
+if(!Number.isFinite(amount)||amount<=0)return alert("Unesi iznos veći od nule.");
+if(!description)return alert("Unesi opis.");
+let category=currentType==="expense"?document.getElementById("category").value:"";
+let fromSavings=currentType==="expense"&&document.getElementById("paymentAccount").value==="savings";
+if(currentType==="expense"&&fromSavings&&amount>Number(state.savings))return alert("Nema dovoljno novca na štednom računu.");
+if(fromSavings){
+state.savings-=amount;
+state.savingHistory.push({id:Date.now(),type:"expensePayment",amount,description,date})
+}
+state.entries.push({id:Date.now()+1,type:currentType,amount,description,category,date,fromSavings});
+saveState();
+selectedCategory="";
+selectedMonth=date.slice(0,7);
+home()
 }
 
 function categoryPage(n){
- selectedCategory=n;
- let list=state.entries.filter(e=>e.type==="expense"&&e.category===n&&isMonth(e.date));
- document.getElementById("headerTitle").textContent=n;
- let h=`<div class="page"><button class="back" onclick="home()">← Nazad</button><div class="page-title">${n}</div><div class="section-title">Ukupno: ${money(categoryTotal(n))}</div>`;
- if(!list.length)h+=`<div class="empty">Nema unosa u ${monthTitle()}.</div>`;
- else [...list].reverse().forEach(e=>h+=historyItem(e));
- document.getElementById("app").innerHTML=h+"</div>";
+selectedCategory=n;
+let list=state.entries.filter(e=>e.type==="expense"&&e.category===n&&isMonth(e.date));
+document.getElementById("headerTitle").textContent=n;
+let h=`<div class="page"><button class="back" onclick="home()">← Nazad</button><div class="page-title">${n}</div><div class="section-title">Ukupno: ${money(categoryTotal(n))}</div>`;
+if(!list.length)h+=`<div class="empty">Nema unosa u ${monthTitle()}.</div>`;
+else [...list].reverse().forEach(e=>h+=historyItem(e));
+document.getElementById("app").innerHTML=h+"</div>"
 }
+
 function historyPage(type){
- selectedCategory="";
- let list=state.entries.filter(e=>e.type===type&&isMonth(e.date));
- document.getElementById("headerTitle").textContent=type==="income"?"Uplate":"Troškovi";
- let h=`<div class="page"><button class="back" onclick="home()">← Nazad</button><div class="page-title">${type==="income"?"Istorija uplata":"Istorija troškova"}</div><div class="section-title">${monthTitle()}</div>`;
- if(!list.length)h+=`<div class="empty">Nema unosa za ${monthTitle()}.</div>`;
- else [...list].reverse().forEach(e=>h+=historyItem(e));
- document.getElementById("app").innerHTML=h+"</div>";
+selectedCategory="";
+let list=state.entries.filter(e=>e.type===type&&isMonth(e.date));
+document.getElementById("headerTitle").textContent=type==="income"?"Uplate":"Troškovi";
+let h=`<div class="page"><button class="back" onclick="home()">← Nazad</button><div class="page-title">${type==="income"?"Istorija uplata":"Istorija troškova"}</div><div class="section-title">${monthTitle()}</div>`;
+if(!list.length)h+=`<div class="empty">Nema unosa za ${monthTitle()}.</div>`;
+else [...list].reverse().forEach(e=>h+=historyItem(e));
+document.getElementById("app").innerHTML=h+"</div>"
 }
+
 function historyItem(e){
- return `<div class="history-item"><div class="history-left"><div class="history-desc">${esc(e.description)}</div><div class="history-date">${formatDate(e.date)}${e.category?" • "+esc(e.category):""}${e.fromSavings?" • Plaćeno sa štednje":""}</div></div><div class="history-right"><div class="${e.type==="income"?"income":"expense"}">${e.type==="income"?"+":"−"} ${money(e.amount)}</div><button class="delete" onclick="deleteEntry(${Number(e.id)})">Obriši</button></div></div>`;
+return `<div class="history-item">
+<div class="history-left">
+<div class="history-desc">${esc(e.description)}</div>
+<div class="history-date">${formatDate(e.date)}${e.category?" • "+esc(e.category):""}${e.fromSavings?" • Plaćeno sa štednje":""}</div>
+</div>
+<div class="history-right">
+<div class="${e.type==="income"?"income":"expense"}">${e.type==="income"?"+":"−"} ${money(e.amount)}</div>
+<button class="delete" onclick="deleteEntry(${Number(e.id)})">Obriši</button>
+</div></div>`
 }
+
 function deleteEntry(id){
- let e=state.entries.find(x=>Number(x.id)===Number(id));
- if(!e||!confirm("Obrisati ovaj unos?"))return;
- state.entries=state.entries.filter(x=>Number(x.id)!==Number(id));
- saveState();historyPage(e.type);
+let e=state.entries.find(x=>Number(x.id)===Number(id));
+if(!e||!confirm("Obrisati ovaj unos?"))return;
+state.entries=state.entries.filter(x=>Number(x.id)!==Number(id));
+saveState();
+historyPage(e.type)
 }
 
 function savingsPage(){
- selectedCategory="";
- document.getElementById("headerTitle").textContent="Štedni račun";
- let h=`<div class="page">
- <button class="back" onclick="home()">← Nazad</button>
- <div class="page-title">🏦 Štedni račun</div>
- <div class="balance-card"><div class="balance-title">Trenutno stanje štednje</div><div class="balance">${money(state.savings)}</div></div>
- <div class="saving-buttons">
- <button class="primary" onclick="savingDepositPage()">+ Uplati sa redovnog</button>
- <button class="secondary" onclick="savingDirectDepositPage()">+ Uplata na štedni račun</button>
- </div>
- <div class="section-title">Istorija štednje</div>`;
- if(!state.savingHistory.length)h+=`<div class="empty">Nema aktivnosti na štednom računu.</div>`;
- else [...state.savingHistory].reverse().forEach(x=>{
-  const positive=x.type==="deposit"||x.type==="directDeposit";
-  h+=`<div class="history-item"><div class="history-left"><div class="history-desc">${esc(x.description)}</div><div class="history-date">${formatDate(x.date)}</div></div><div class="history-right">${x.type==="initial"?money(x.amount):`<div class="${positive?"income":"expense"}">${positive?"+":"−"} ${money(x.amount)}</div>`}</div></div>`;
- });
- document.getElementById("app").innerHTML=h+"</div>";
+selectedCategory="";
+document.getElementById("headerTitle").textContent="Štedni račun";
+let h=`<div class="page">
+<button class="back" onclick="home()">← Nazad</button>
+<div class="page-title">🏦 Štedni račun</div>
+<div class="balance-card"><div class="balance-title">Trenutno stanje štednje</div><div class="balance">${money(state.savings)}</div></div>
+<div class="saving-buttons">
+<button class="primary" onclick="savingDepositPage()">+ Uplati sa redovnog</button>
+<button class="secondary" onclick="savingDirectDepositPage()">＋ Uplata na štedni račun</button>
+</div>
+<div class="section-title">Istorija štednje</div>`;
+if(!state.savingHistory.length)h+=`<div class="empty">Nema aktivnosti na štednom računu.</div>`;
+else [...state.savingHistory].reverse().forEach(x=>h+=`<div class="history-item"><div class="history-left"><div class="history-desc">${esc(x.description)}</div><div class="history-date">${formatDate(x.date)}</div></div><div class="history-right">${x.type==="initial"?money(x.amount):`<div class="${(x.type==="deposit"||x.type==="directDeposit")?"income":"expense"}">${(x.type==="deposit"||x.type==="directDeposit")?"+":"−"} ${money(x.amount)}</div>`}${x.type!=="initial"?`<button class="delete" onclick="deleteSavingHistory(${Number(x.id)})">Obriši</button>`:""}</div></div>`);
+document.getElementById("app").innerHTML=h+"</div>"
+}
+
+function deleteSavingHistory(id){
+let x=state.savingHistory.find(a=>Number(a.id)===Number(id));
+if(!x||!confirm("Obrisati ovu aktivnost štednje?"))return;
+if(x.type==="deposit"||x.type==="directDeposit")state.savings-=Number(x.amount);
+else if(x.type==="withdraw"||x.type==="expensePayment")state.savings+=Number(x.amount);
+state.savingHistory=state.savingHistory.filter(a=>Number(a.id)!==Number(id));
+saveState();
+savingsPage()
 }
 
 function savingDepositPage(){
- document.getElementById("headerTitle").textContent="Uplata na štednju";
- document.getElementById("app").innerHTML=`<div class="page">
- <button class="back" onclick="savingsPage()">← Nazad</button>
- <div class="page-title">Uplata sa redovnog рачуна</div>
- <div class="notice">Novac se prebacuje sa redovnog na štedni račun. Nije novi prihod niti trošak.</div>
- <div class="form-card">
- <label>Datum</label><input id="savingDate" type="date" value="${todayISO()}">
- <label>Iznos (RSD)</label><input id="savingAmount" type="number" min="1" step="1" placeholder="Npr. 5000">
- <label>Opis</label><input id="savingDescription" placeholder="Npr. mesečna štednja">
- <button class="primary" onclick="saveSavingDeposit()">Uplati sa redovnog</button>
- </div></div>`;
+document.getElementById("headerTitle").textContent="Uplata na štednju";
+document.getElementById("app").innerHTML=`<div class="page">
+<button class="back" onclick="savingsPage()">← Nazad</button>
+<div class="page-title">Uplata na štednju</div>
+<div class="notice">Novac se prebacuje sa redovnog na štedni račun. Nije novi prihod niti trošak.</div>
+<div class="form-card">
+<label>Datum</label><input id="savingDate" type="date" value="${todayISO()}">
+<label>Iznos (RSD)</label><input id="savingAmount" type="number" min="1" step="1" placeholder="Npr. 5000">
+<label>Opis</label><input id="savingDescription" placeholder="Npr. mesečna štednja">
+<button class="primary" onclick="saveSavingDeposit()">Prebaci u štednju</button>
+</div></div>`
 }
+
 function saveSavingDeposit(){
- let amount=Number(document.getElementById("savingAmount").value),description=document.getElementById("savingDescription").value.trim(),date=document.getElementById("savingDate").value;
- if(!date)return alert("Izaberi datum.");
- if(!Number.isFinite(amount)||amount<=0)return alert("Unesi iznos veći od nule.");
- if(amount>regularBalance())return alert("Nema dovoljno novca na redovnom računu.");
- if(!description)return alert("Unesi opis.");
- state.savings+=amount;
- state.savingHistory.push({id:Date.now(),type:"deposit",amount,description,date});
- saveState();savingsPage();
+let amount=Number(document.getElementById("savingAmount").value);
+let description=document.getElementById("savingDescription").value.trim();
+let date=document.getElementById("savingDate").value;
+if(!date)return alert("Izaberi datum.");
+if(!Number.isFinite(amount)||amount<=0)return alert("Unesi iznos veći od nule.");
+if(amount>regularBalance())return alert("Nema dovoljno novca na redovnom računu.");
+if(!description)return alert("Unesi opis.");
+state.savings+=amount;
+state.savingHistory.push({id:Date.now(),type:"deposit",amount,description,date});
+saveState();
+savingsPage()
 }
 
 function savingDirectDepositPage(){
- document.getElementById("headerTitle").textContent="Uplata na štedni račun";
- document.getElementById("app").innerHTML=`<div class="page">
- <button class="back" onclick="savingsPage()">← Nazad</button>
- <div class="page-title">Uplata na štedni račun</div>
- <div class="notice">Ova uplata dodaje novac direktno na štedni račun i ne skida ga sa redovnog računa.</div>
- <div class="form-card">
- <label>Datum</label><input id="savingDate" type="date" value="${todayISO()}">
- <label>Iznos (RSD)</label><input id="savingAmount" type="number" min="1" step="1" placeholder="Npr. 5000">
- <label>Opis</label><input id="savingDescription" placeholder="Npr. direktna uplata na štednju">
- <button class="primary" onclick="saveSavingDirectDeposit()">Uplati na štedni račun</button>
- </div></div>`;
+document.getElementById("headerTitle").textContent="Uplata na štedni račun";
+document.getElementById("app").innerHTML=`<div class="page">
+<button class="back" onclick="savingsPage()">← Nazad</button>
+<div class="page-title">Uplata na štedni račun</div>
+<div class="notice">Unesi novac koji direktno uplaćuješ na štedni račun, bez skidanja sa redovnog računa.</div>
+<div class="form-card">
+<label>Datum</label><input id="savingDate" type="date" value="${todayISO()}">
+<label>Iznos (RSD)</label><input id="savingAmount" type="number" min="1" step="1" placeholder="Npr. 5000">
+<label>Opis</label><input id="savingDescription" placeholder="Npr. dodatna uplata na štednju">
+<button class="primary" onclick="saveSavingDirectDeposit()">Uplati na štedni račun</button>
+</div></div>`
 }
+
 function saveSavingDirectDeposit(){
- let amount=Number(document.getElementById("savingAmount").value),description=document.getElementById("savingDescription").value.trim(),date=document.getElementById("savingDate").value;
- if(!date)return alert("Izaberi datum.");
- if(!Number.isFinite(amount)||amount<=0)return alert("Unesi iznos veći od nule.");
- if(!description)return alert("Unesi opis.");
- state.savings+=amount;
- state.savingHistory.push({id:Date.now(),type:"directDeposit",amount,description,date});
- saveState();selectedMonth=date.slice(0,7);savingsPage();
+let amount=Number(document.getElementById("savingAmount").value);
+let description=document.getElementById("savingDescription").value.trim();
+let date=document.getElementById("savingDate").value;
+if(!date)return alert("Izaberi datum.");
+if(!Number.isFinite(amount)||amount<=0)return alert("Unesi iznos veći od nule.");
+if(!description)return alert("Unesi opis.");
+state.savings+=amount;
+state.savingHistory.push({id:Date.now(),type:"directDeposit",amount,description,date});
+saveState();
+selectedMonth=date.slice(0,7);
+savingsPage()
+}
+
+function savingWithdrawPage(){
+document.getElementById("headerTitle").textContent="Prebacivanje na redovan račun";
+document.getElementById("app").innerHTML=`<div class="page">
+<button class="back" onclick="savingsPage()">← Nazad</button>
+<div class="page-title">Prebaci sa štednje na redovan račun</div>
+<div class="notice">Ovo je prenos između tvojih računa: štednja se smanjuje, a redovan račun povećava. Ne knjiži se kao trošak.</div>
+<div class="form-card">
+<label>Datum</label><input id="savingDate" type="date" value="${todayISO()}">
+<label>Iznos (RSD)</label><input id="savingAmount" type="number" min="1" step="1" placeholder="Npr. 5000">
+<label>Opis</label><input id="savingDescription" placeholder="Npr. prebacivanje na karticu">
+<button class="primary" onclick="saveSavingWithdraw()">Prebaci na redovan račun</button>
+</div></div>`
+}
+
+function saveSavingWithdraw(){
+let amount=Number(document.getElementById("savingAmount").value);
+let description=document.getElementById("savingDescription").value.trim();
+let date=document.getElementById("savingDate").value;
+if(!date)return alert("Izaberi datum.");
+if(!Number.isFinite(amount)||amount<=0)return alert("Unesi iznos veći od nule.");
+if(amount>Number(state.savings))return alert("Nema dovoljno novca na štednom računu.");
+if(!description)return alert("Unesi opis.");
+state.savings-=amount;
+state.savingHistory.push({id:Date.now(),type:"withdraw",amount,description,date});
+saveState();
+selectedMonth=date.slice(0,7);
+savingsPage()
 }
 
 function toggleTheme(){
- document.body.classList.toggle("dark");
- let d=document.body.classList.contains("dark");
- localStorage.setItem("mojNovcanikTheme",d?"dark":"light");
- document.getElementById("themeBtn").textContent=d?"☀️":"🌙";
+document.body.classList.toggle("dark");
+let d=document.body.classList.contains("dark");
+localStorage.setItem("mojNovcanikTheme",d?"dark":"light");
+document.getElementById("themeBtn").textContent=d?"☀️":"🌙"
 }
 function loadTheme(){
- if(localStorage.getItem("mojNovcanikTheme")==="dark"){
-  document.body.classList.add("dark");
-  document.getElementById("themeBtn").textContent="☀️";
- }
+if(localStorage.getItem("mojNovcanikTheme")==="dark"){
+document.body.classList.add("dark");
+document.getElementById("themeBtn").textContent="☀️"
+}
 }
 loadTheme();
 home();
